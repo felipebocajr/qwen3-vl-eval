@@ -108,6 +108,26 @@ def evaluate_sample(model, processor, sample) -> dict:
     return record
 
 
+def load_completed_sample_ids(jsonl_path: str) -> set[str]:
+    """Read trajectories.jsonl and return a set of already-completed sample IDs."""
+    completed = set()
+    if not os.path.exists(jsonl_path):
+        return completed
+
+    with open(jsonl_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                record = json.loads(line)
+                completed.add(record["sample_id"])
+            except (json.JSONDecodeError, KeyError):
+                continue
+
+    return completed
+
+
 def save_trajectory(record: dict, out_dir: str = "results"):
     """Save trajectory record as individual JSON and append to JSONL."""
     os.makedirs(out_dir, exist_ok=True)

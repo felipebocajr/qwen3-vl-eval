@@ -2,6 +2,12 @@
 project-goal.txt
 results/
 
+# speckit / specify
+.specify/
+
+# pi coding agent workspace
+.pi/
+
 # Python
 __pycache__/
 *.py[cod]
