@@ -2,6 +2,25 @@
 
 A local evaluation pipeline that loads **Qwen3-VL-2B-Instruct**, runs structured inference on **100 stratified samples** from the **MMMU** (Massive Multi-discipline Multimodal Understanding) dataset, and produces per-sample trajectories, aggregate metrics, and visualization charts.
 
+## Project Considerations
+
+### Results
+
+- Fetches 100 samples from the HF MMMU dataset using stratified fetching across subjects, meaning all subjects have the same number of samples evaluated.
+- Resumability logic implemented by tracking the `sample_id`, ensuring that the pipeline can continue exactly from where it stopped if anything interrupts it in the middle of an evaluation.
+- Structured generation via Outlines ensures every model output is valid, parseable JSON — eliminating brittle regex-only extraction from the primary path.
+- If the primary inference fails to produce parseable JSON, the pipeline automatically retries with **2× the token budget** (e.g., 1024 → 2048) as part of the three-stage extraction cascade, achieving a 0% overall parse failure rate.
+
+### Main Issues Encountered
+
+- **5% parse failure rate with 512 max_new_tokens**, mainly due to truncated model outputs. Switching to 1024 max_new_tokens via the retry fallback achieved a 0% parse failure rate (every sample was answered by the model). Dealing with the truncation of the model's reasoning was a significant challenge.
+
+  **Approach**: Implemented a three-stage extraction cascade. If the first inference attempt fails to produce parseable JSON, the pipeline retries the same sample with 2× the token budget. If that also fails, a regex-based fallback attempts recovery as a last resort.
+
+- **Memory explosion (OOM)**: The system was not releasing consumed RAM during new sample evaluations, resulting in multiple crashes.
+
+  **Approach**: 1) Explicitly closing PIL images after each sample for immediate garbage collection; 2) Forcing PyTorch to release cached GPU memory via `torch.cuda.empty_cache()` after every generation.
+
 ## Features
 
 - **Structured Generation**: Every model response is constrained at decode time by a Pydantic schema (`{"reasoning": "...", "answer": "A|B|C|D"}`) using the Outlines library, guaranteeing parseable JSON output.
@@ -198,24 +217,6 @@ The pipeline uses **Outlines** to enforce a Pydantic schema at every decoding st
 2. **Constrained generation** (`src/adapters/qwen.py`): The Outlines `Generator` wraps Qwen3-VL with logits filtering that only allows tokens conforming to the schema.
 3. **Deterministic parsing** (`src/parser.py`): Responses are parsed with `json.loads()` + `ModelResponse.model_validate()`. The regex fallback only activates when both JSON attempts fail.
 4. **Prompt design** (`src/pipeline.py`): The prompt instructs the model to think step by step and emit ONLY valid JSON.
-
-## Project Considerations
-
-### Results
-
-- Fetches 100 samples from the HF MMMU dataset using stratified fetching across subjects, meaning all subjects have the same number of samples evaluated.
-- Resumability logic implemented by tracking the `sample_id`, ensuring that the pipeline can continue exactly from where it stopped if anything interrupts it in the middle of an evaluation.
-- Structured generation via Outlines ensures every model output is valid, parseable JSON — eliminating brittle regex-only extraction from the primary path.
-
-### Main Issues Encountered
-
-- **5% parse failure rate with 512 max_new_tokens**, mainly due to truncated model outputs. Switching to 1024 max_new_tokens via the retry fallback achieved a 0% parse failure rate (every sample was answered by the model). Dealing with the truncation of the model's reasoning was a significant challenge.
-
-  **Approach**: Implemented a three-stage extraction cascade. If the first inference attempt fails to produce parseable JSON, the pipeline retries the same sample with 2× the token budget. If that also fails, a regex-based fallback attempts recovery as a last resort.
-
-- **Memory explosion (OOM)**: The system was not releasing consumed RAM during new sample evaluations, resulting in multiple crashes.
-
-  **Approach**: 1) Explicitly closing PIL images after each sample for immediate garbage collection; 2) Forcing PyTorch to release cached GPU memory via `torch.cuda.empty_cache()` after every generation.
 
 ## Verification Scripts
 
