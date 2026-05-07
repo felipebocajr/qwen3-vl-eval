@@ -1,15 +1,28 @@
-"""Answer extraction from model responses."""
+"""Answer extraction from model responses using Pydantic validation."""
 
+import json
 import re
+from typing import Tuple
+
+from pydantic import ValidationError
+
+from src.schemas import ModelResponse
 
 
+def _strip_markdown_fences(text: str) -> str:
+    """Remove leading/trailing markdown code fences so JSON can be parsed."""
+    text = text.strip()
+    text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*```$", "", text)
+    return text.strip()
 
-# ESSE CODIGO PRECISA SER MUDADO PARA PEGAR APENAS A RESPOSTA (extracted_answer) E NÃO O TEXTO TODO. DEVE SER FEITO UM TESTE DE SIMILARIDADE COMPARANDO A RESPOSTA DO MODELO COM A RESPOSTA REAL.
 
-
-def extract_answer(text: str, num_choices: int = 4) -> tuple[str | None, bool]:
+def extract_answer(text: str, num_choices: int = 4) -> Tuple[str | None, bool]:
     """
     Extract a multiple-choice letter answer from raw model text.
+
+    Primary strategy: structured JSON via Pydantic.
+    Fallback: none – Outlines guarantees JSON conformance.
 
     Returns:
         (extracted_letter, succeeded)
@@ -18,29 +31,13 @@ def extract_answer(text: str, num_choices: int = 4) -> tuple[str | None, bool]:
     if not text:
         return None, False
 
-    max_letter = chr(ord("A") + num_choices - 1)
+    cleaned = _strip_markdown_fences(text)
 
-    # Priority 1: first character is a valid option letter
-    first = text[0].upper()
-    if "A" <= first <= max_letter:
-        return first, True
-
-    # Priority 2: pattern like (B), [B], B), B., B:
-    pattern = r"[\(\[]?\s*([A-" + max_letter + r"])\s*[\)\].:]"
-    m = re.search(pattern, text)
-    if m:
-        return m.group(1).upper(), True
-
-    # Priority 3: "answer is B", "option B", "correct answer: B"
-    pattern = r"(?:answer|option|choice)\s*(?:is|:|\.|\s)\s*([A-" + max_letter + "])"
-    m = re.search(pattern, text, re.IGNORECASE)
-    if m:
-        return m.group(1).upper(), True
-
-    # Priority 4: any standalone valid capital letter
-    pattern = r"(?<!\w)([A-" + max_letter + r"])(?!\w)"
-    matches = re.findall(pattern, text.upper())
-    if matches:
-        return matches[-1], True
+    try:
+        parsed = json.loads(cleaned)
+        validated = ModelResponse.model_validate(parsed)
+        return validated.answer, True
+    except (json.JSONDecodeError, ValidationError):
+        pass
 
     return None, False

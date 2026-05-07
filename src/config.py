@@ -5,6 +5,9 @@ RESULTS_DIR = "results"
 TRAJECTORIES_PATH = f"{RESULTS_DIR}/trajectories.jsonl"
 SUMMARY_PATH = f"{RESULTS_DIR}/summary.json"
 
+# Generation parameters
+MAX_NEW_TOKENS = 2048
+
 # Subjects to load from MMMU, listed alphabetically for deterministic ordering
 SUBJECTS = [
     "Accounting",
@@ -19,4 +22,3 @@ def get_subject_quotas(max_samples: int, num_subjects: int) -> list[int]:
     base = max_samples // num_subjects
     remainder = max_samples % num_subjects
     return [base + (1 if i < remainder else 0) for i in range(num_subjects)]
-

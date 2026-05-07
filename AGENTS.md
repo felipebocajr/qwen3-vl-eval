@@ -115,6 +115,5 @@ Suggested layout:
 - **Non-null extraction target** — Truncated or malformed raw responses should still yield a best-effort `extracted_answer`. For example, if the response is cut off, the parser should attempt to infer the answer from the last visible option letter, or mark it as a parse failure rather than silently returning null.
 
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+Current plan: [specs/007-structured-generation-refactor/plan.md](specs/007-structured-generation-refactor/plan.md)
 <!-- SPECKIT END -->

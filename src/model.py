@@ -1,23 +1,30 @@
 import torch
-from PIL import Image
+from PIL import Image as PILImage
+from outlines import from_transformers, Generator, inputs
 from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
+
+from src.schemas import ModelResponse
 
 
 MODEL_ID = "Qwen/Qwen3-VL-2B-Instruct"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
+# Module-level cache so the (expensive) JSON-schema logits processor is built
+# once and reused across all evaluation samples.
+_generator_cache: dict[int, Generator] = {}
 
-def load_model_and_processor(model_id: str = MODEL_ID):
+
+def load_model_and_processor():
     """Load Qwen3-VL model and processor locally."""
-    print(f"Loading model {model_id} on {DEVICE} ...")
+    print(f"Loading model {MODEL_ID} on {DEVICE} ...")
     model = Qwen3VLForConditionalGeneration.from_pretrained(
-        model_id,
+        MODEL_ID,
         torch_dtype=torch.bfloat16,
         device_map="auto",
         trust_remote_code=True,
     )
     processor = AutoProcessor.from_pretrained(
-        model_id,
+        MODEL_ID,
         trust_remote_code=True,
     )
     model.eval()
@@ -25,48 +32,54 @@ def load_model_and_processor(model_id: str = MODEL_ID):
     return model, processor
 
 
+def _get_cached_generator(
+    model: Qwen3VLForConditionalGeneration,
+    processor: AutoProcessor,
+) -> Generator:
+    """Return a cached Outlines Generator for the given model/processor pair."""
+    key = id(model)
+    if key not in _generator_cache:
+        outlines_model = from_transformers(model, processor)
+        _generator_cache[key] = Generator(outlines_model, output_type=ModelResponse)
+    return _generator_cache[key]
+
+
 def run_inference(
     model: Qwen3VLForConditionalGeneration,
     processor: AutoProcessor,
-    images: list[Image.Image],
+    images: list[PILImage.Image],
     prompt: str,
-    max_new_tokens: int = 512,
+    max_new_tokens: int = 2048,
 ) -> str:
-    """Run a single forward pass and return the decoded response."""
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                * [{"type": "image", "image": img} for img in images],
-                {"type": "text", "text": prompt},
-            ],
-        }
-    ]
+    """
+    Run structured generation via Outlines + Pydantic schema and return
+    the raw JSON string produced by the model.
+    """
+    generator = _get_cached_generator(model, processor)
 
-    text = processor.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
+    # Build a chat prompt with a system instruction that tells the model to
+    # emit only valid JSON matching the Pydantic schema.
+    chat = inputs.Chat()
+    chat.add_system_message(
+        "You are a helpful assistant. For multiple-choice questions, think "
+        "step by step and explain your reasoning, then respond with ONLY "
+        "valid JSON matching the provided schema. Do not include markdown, "
+        "explanations, or any text outside the JSON."
     )
 
-    inputs = processor(
-        text=[text],
-        images=images if images else None,
-        return_tensors="pt",
+    # Attach images (if any) via outlines' multimodal inputs helper.
+    content_parts = [prompt]
+    for img in images:
+        content_parts.append(inputs.Image(img))
+
+    chat.add_user_message(content_parts)
+
+    # The logits processor enforces valid JSON that conforms to ModelResponse
+    # at every decoding step, effectively preventing run-away reasoning chains.
+    raw_answer = generator(
+        chat,
+        max_new_tokens=max_new_tokens,
+        do_sample=False,
     )
-    inputs = inputs.to(model.device)
 
-    with torch.no_grad():
-        output_ids = model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens,
-            do_sample=False,
-        )
-
-    generated_ids = output_ids[:, inputs.input_ids.shape[1]:]
-    raw_answer = processor.batch_decode(
-        generated_ids,
-        skip_special_tokens=True,
-    )[0].strip()
-
-    return raw_answer
+    return raw_answer.strip()

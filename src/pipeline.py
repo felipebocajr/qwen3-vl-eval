@@ -7,6 +7,7 @@ from typing import List
 
 from PIL import Image
 
+from src import config
 from src.model import run_inference
 from src.parser import extract_answer
 
@@ -49,7 +50,10 @@ def build_prompt(question: str, options: List[str]) -> str:
         lines.append("Options:")
         for choice in format_choices(options):
             lines.append(choice)
-    lines.append("\nAnswer with the option's letter from the given choices directly.")
+    lines.append(
+        "\nThink step by step, then respond with ONLY valid JSON matching this "
+        'exact schema: {"reasoning": "<your reasoning>", "answer": "<A|B|C|D>"}.'
+    )
     return "\n".join(lines)
 
 
@@ -93,7 +97,9 @@ def evaluate_sample(model, processor, sample) -> dict:
 
     try:
         start = time.perf_counter()
-        raw_answer = run_inference(model, processor, images, prompt)
+        raw_answer = run_inference(
+            model, processor, images, prompt, max_new_tokens=config.MAX_NEW_TOKENS
+        )
         elapsed = time.perf_counter() - start
         record["inference_time_seconds"] = round(elapsed, 2)
         record["raw_model_response"] = raw_answer
