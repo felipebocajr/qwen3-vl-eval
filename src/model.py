@@ -3,7 +3,7 @@ from PIL import Image as PILImage
 from outlines import from_transformers, Generator, inputs
 from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
 
-from src.schemas import ModelResponse
+from src.schemas import make_response_schema
 
 
 MODEL_ID = "Qwen/Qwen3-VL-2B-Instruct"
@@ -11,7 +11,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Module-level cache so the (expensive) JSON-schema logits processor is built
 # once and reused across all evaluation samples.
-_generator_cache: dict[int, Generator] = {}
+_generator_cache: dict[tuple[int, int], Generator] = {}
 
 
 def load_model_and_processor():
@@ -35,12 +35,19 @@ def load_model_and_processor():
 def _get_cached_generator(
     model: Qwen3VLForConditionalGeneration,
     processor: AutoProcessor,
+    num_options: int,
 ) -> Generator:
-    """Return a cached Outlines Generator for the given model/processor pair."""
-    key = id(model)
+    """Return a cached Outlines Generator for the given model/processor pair.
+
+    Generators are cached by ``(model_id, num_options)`` so that the
+    constrained decoder only allows the exact set of option letters that
+    exist in the current MMMU sample.
+    """
+    key = (id(model), num_options)
     if key not in _generator_cache:
         outlines_model = from_transformers(model, processor)
-        _generator_cache[key] = Generator(outlines_model, output_type=ModelResponse)
+        output_schema = make_response_schema(num_options)
+        _generator_cache[key] = Generator(outlines_model, output_type=output_schema)
     return _generator_cache[key]
 
 
@@ -49,13 +56,14 @@ def run_inference(
     processor: AutoProcessor,
     images: list[PILImage.Image],
     prompt: str,
+    num_options: int = 4,
     max_new_tokens: int = 2048,
 ) -> str:
     """
     Run structured generation via Outlines + Pydantic schema and return
     the raw JSON string produced by the model.
     """
-    generator = _get_cached_generator(model, processor)
+    generator = _get_cached_generator(model, processor, num_options)
 
     # Build a chat prompt with a system instruction that tells the model to
     # emit only valid JSON matching the Pydantic schema.

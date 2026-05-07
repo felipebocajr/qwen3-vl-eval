@@ -1,30 +1,58 @@
 """Pydantic schemas for structured model outputs."""
 
-from typing import Literal
+from enum import Enum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, create_model
+from outlines.types import JsonSchema
 
 
-class ModelResponse(BaseModel):
+def make_response_model(num_choices: int):
+    """Create a Pydantic model whose ``answer`` field allows exactly the
+    letters ``A`` … up to the number of choices provided.
+
+    For non-multiple-choice questions (``num_choices <= 0``) the answer
+    field is a plain ``str``.
     """
-    Expected JSON schema for model answers.
-    reasoning precedes answer so the constrained decoder emits thought first.
-    """
+    if num_choices <= 0:
+        return create_model(
+            "ModelResponse_0",
+            reasoning=(
+                str,
+                Field(
+                    default="",
+                    description="Step-by-step reasoning that leads to the final answer.",
+                ),
+            ),
+            answer=(
+                str,
+                Field(..., description="The answer text (non-multiple-choice)."),
+            ),
+        )
 
-    reasoning: str = Field(
-        default="",
-        description="Step-by-step reasoning that leads to the final answer.",
+    letters = [chr(ord("A") + i) for i in range(num_choices)]
+    enum_class = Enum("AnswerEnum", {letter: letter for letter in letters})
+
+    return create_model(
+        f"ModelResponse_{num_choices}",
+        reasoning=(
+            str,
+            Field(
+                default="",
+                description="Step-by-step reasoning that leads to the final answer.",
+            ),
+        ),
+        answer=(
+            enum_class,
+            Field(..., description="The selected option letter."),
+        ),
     )
 
-    answer: Literal["A", "B", "C", "D"] = Field(
-        ...,
-        description="The selected option letter.",
-    )
 
-    @field_validator("answer", mode="before")
-    @classmethod
-    def uppercase_answer(cls, v):
-        """Normalise answer to uppercase."""
-        if isinstance(v, str):
-            return v.strip().upper()
-        return v
+def make_response_schema(num_choices: int) -> JsonSchema:
+    """Return an Outlines ``JsonSchema`` term that constrains generation.
+
+    The schema limits the ``answer`` field to the exact set of option
+    letters present in the current MMMU sample.
+    """
+    model_cls = make_response_model(num_choices)
+    return JsonSchema(model_cls)

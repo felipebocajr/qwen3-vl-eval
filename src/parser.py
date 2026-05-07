@@ -6,7 +6,7 @@ from typing import Tuple
 
 from pydantic import ValidationError
 
-from src.schemas import ModelResponse
+from src.schemas import make_response_model
 
 
 def _strip_markdown_fences(text: str) -> str:
@@ -35,9 +35,10 @@ def extract_answer(text: str, num_choices: int = 4) -> Tuple[str | None, bool]:
 
     try:
         parsed = json.loads(cleaned)
-        validated = ModelResponse.model_validate(parsed)
-        return validated.answer, True
-    except (json.JSONDecodeError, ValidationError):
+        ResponseModel = make_response_model(num_choices)
+        validated = ResponseModel.model_validate(parsed)
+        return str(validated.answer), True
+    except (json.JSONDecodeError, Exception):
         pass
 
     return None, False

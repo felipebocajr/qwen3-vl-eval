@@ -18,8 +18,12 @@ def extract_images(sample: dict) -> List[Image.Image]:
     for i in range(1, 8):
         img = sample.get(f"image_{i}")
         if img is not None:
+            original_format = getattr(img, "format", None)
             if img.mode != "RGB":
                 img = img.convert("RGB")
+            # convert() strips the .format attribute which Outlines' inputs.Image requires
+            if getattr(img, "format", None) is None and original_format:
+                img.format = original_format
             images.append(img)
     return images
 
@@ -50,9 +54,15 @@ def build_prompt(question: str, options: List[str]) -> str:
         lines.append("Options:")
         for choice in format_choices(options):
             lines.append(choice)
+    # Build a human-readable schema hint that matches the actual option count
+    if options:
+        letters = "|".join(chr(ord("A") + i) for i in range(len(options)))
+        schema_hint = f'{{"reasoning": "<your reasoning>", "answer": "<{letters}>"}}'
+    else:
+        schema_hint = '{"reasoning": "<your reasoning>", "answer": "<text answer>"}'
     lines.append(
-        "\nThink step by step, then respond with ONLY valid JSON matching this "
-        'exact schema: {"reasoning": "<your reasoning>", "answer": "<A|B|C|D>"}.'
+        f"\nThink step by step, then respond with ONLY valid JSON matching this "
+        f"exact schema: {schema_hint}."
     )
     return "\n".join(lines)
 
@@ -98,7 +108,12 @@ def evaluate_sample(model, processor, sample) -> dict:
     try:
         start = time.perf_counter()
         raw_answer = run_inference(
-            model, processor, images, prompt, max_new_tokens=config.MAX_NEW_TOKENS
+            model,
+            processor,
+            images,
+            prompt,
+            num_options=len(options),
+            max_new_tokens=config.MAX_NEW_TOKENS,
         )
         elapsed = time.perf_counter() - start
         record["inference_time_seconds"] = round(elapsed, 2)
