@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Art_8",
+  "subject": "Art",
+  "question": ": A Conversation with the Sea stands in which British seaside town?",
+  "choices": [
+    "A: Herne Bay, Kent",
+    "B: St Ives, Cornwall",
+    "C: Aldeburgh, Suffolk",
+    "D: Sandown, Isle of Wight"
+  ],
+  "correct_answer": "C",
+  "prompt_sent": "Question: : A Conversation with the Sea stands in which British seaside town?\nOptions:\nA: Herne Bay, Kent\nB: St Ives, Cornwall\nC: Aldeburgh, Suffolk\nD: Sandown, Isle of Wight\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The sculpture 'A Conversation with the Sea' is a large, metallic, fan-shaped structure located on a pebble beach. It is situated in a coastal area with a prominent sea view. The sculpture is known to be located in the town of Herne Bay, Kent, which is a well-known seaside town in the United Kingdom. The other options—St Ives, Aldeburgh, and Sandown—are also coastal towns, but the specific sculpture is famously associated with Herne Bay.\", \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": false,
+  "inference_time_seconds": 3.01,
+  "error": null,
+  "used_fallback_extraction": false
+}

@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Art_4",
+  "subject": "Art",
+  "question": "Slight? what can be fixed by editing programs after it has been shot? (fill in the )",
+  "choices": [
+    "A: Colour",
+    "B: Aperture problems",
+    "C: Blurs",
+    "D: Over and underexposure"
+  ],
+  "correct_answer": "D",
+  "prompt_sent": "Question: Slight? what can be fixed by editing programs after it has been shot? (fill in the )\nOptions:\nA: Colour\nB: Aperture problems\nC: Blurs\nD: Over and underexposure\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The image shows a scene of a snowy village with buildings and mountains. The left side of the image is overexposed, meaning the snow is too bright and washed out. The right side is underexposed, meaning the details are lost in the shadows. The middle part of the image is properly exposed. This suggests that the exposure issues are the main problem that can be corrected with editing software. The other options, such as colour and blur, are not typically fixed by editing programs after the image has been shot, as they are more related to the camera settings or post-processing techniques. Therefore, the most likely answer is D: Over and underexposure.\", \"answer\": \"D\"}",
+  "extracted_answer": "D",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 3.95,
+  "error": null,
+  "used_fallback_extraction": false
+}

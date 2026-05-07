@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Biology_2",
+  "subject": "Biology",
+  "question": "Using the scale bar, estimate the diameter of the vacuole in .",
+  "choices": [
+    "A: 5.0 nm",
+    "B: 50 um",
+    "C: 7.5 um",
+    "D: 5.2 um"
+  ],
+  "correct_answer": "D",
+  "prompt_sent": "Question: Using the scale bar, estimate the diameter of the vacuole in .\nOptions:\nA: 5.0 nm\nB: 50 um\nC: 7.5 um\nD: 5.2 um\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The scale bar in the image indicates that 1 unit of length is equal to 5 micrometers (μm). The vacuole is labeled and its diameter appears to be approximately 5.0 times the scale bar length. Therefore, the diameter of the vacuole is 5.0 μm.\", \"answer\": \"D\"}",
+  "extracted_answer": "D",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 2.18,
+  "error": null,
+  "used_fallback_extraction": false
+}

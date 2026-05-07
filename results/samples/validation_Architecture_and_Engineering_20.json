@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Architecture_and_Engineering_20",
+  "subject": "Architecture_and_Engineering",
+  "question": "2 Calculate the side widths and cross-sectional area of an embankment (Figure 11.13) having the following dimensions:Road width = 20 m;existing ground slope = 1 in 10 (10%);Side slopes = 1 in 2 (50%);centre height = 10 m.",
+  "choices": [
+    "A: Side width $w_{1}$ = 37.4 m,Side width $w_{2}$ = 25.0 m,Total area = 418.75 $m^{2}$",
+    "B: Side width $w_{1}$ = 37.5 m,Side width $w_{2}$ = 25.0 m,Total area = 418.75 $m^{2}$",
+    "C: Side width $w_{1}$ = 37.3 m,Side width $w_{2}$ = 25.0 m,Total area = 418.75 $m^{2}$",
+    "D: Side width $w_{1}$ = 37.2 m,Side width $w_{2}$ = 25.0 m,Total area = 418.75 $m^{2}$"
+  ],
+  "correct_answer": "B",
+  "prompt_sent": "Question: 2 Calculate the side widths and cross-sectional area of an embankment (Figure 11.13) having the following dimensions:Road width = 20 m;existing ground slope = 1 in 10 (10%);Side slopes = 1 in 2 (50%);centre height = 10 m.\nOptions:\nA: Side width $w_{1}$ = 37.4 m,Side width $w_{2}$ = 25.0 m,Total area = 418.75 $m^{2}$\nB: Side width $w_{1}$ = 37.5 m,Side width $w_{2}$ = 25.0 m,Total area = 418.75 $m^{2}$\nC: Side width $w_{1}$ = 37.3 m,Side width $w_{2}$ = 25.0 m,Total area = 418.75 $m^{2}$\nD: Side width $w_{1}$ = 37.2 m,Side width $w_{2}$ = 25.0 m,Total area = 418.75 $m^{2}$\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The embankment is a trapezoidal shape with a road width of 20 m, existing ground slope of 1 in 10 (10%), side slopes of 1 in 2 (50%), and a center height of 10 m. The side slopes are given as 1 in 2, which means for every 1 unit of horizontal distance, there are 2 units of vertical rise. The existing ground slope is 1 in 10, meaning for every 10 units of horizontal distance, there is 1 unit of vertical rise.\\n\\nFirst, we calculate the side width of the embankment. The road width is 20 m, and the center height is 10 m. The side slope is 1 in 2, so the vertical rise is 1 unit for every 2 units of horizontal distance. The horizontal distance from the center of the road to the side of the embankment is 10 m (since the slope is 1 in 10, the vertical rise is 10 m for a horizontal distance of 100 m). The side slope is 1 in 2, so the horizontal distance from the center of the road to the side of the embankment is 10 m (since the slope is 1 in 10, the vertical rise is 10 m for a horizontal distance of 100 m). The side width is the sum of the road width and the horizontal distance from the center of the road to the side of the embankment. The side width is 20 m + 10 m = 30 m. The side width is\", \"answer\": \"B\"}",
+  "extracted_answer": "B",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 8.66,
+  "error": null,
+  "used_fallback_extraction": false
+}

@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Art_20",
+  "subject": "Art",
+  "question": "Which artist painted  of William Hunter, founder of the Hunterian?",
+  "choices": [
+    "A: Sir Joshua Reynolds",
+    "B: Sir Henry Raeburn",
+    "C: George Romney",
+    "D: Allan Ramsay"
+  ],
+  "correct_answer": "D",
+  "prompt_sent": "Question: Which artist painted  of William Hunter, founder of the Hunterian?\nOptions:\nA: Sir Joshua Reynolds\nB: Sir Henry Raeburn\nC: George Romney\nD: Allan Ramsay\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The painting in the image is of William Hunter, a prominent anatomist and surgeon. The portrait is in the style of the 18th century, with a formal pose and elaborate clothing. The artist is known for his portraits of the upper class and for his work in the Neoclassical style. The painting is attributed to Sir Joshua Reynolds, who was a leading portrait painter of the 18th century and was known for his portraits of the aristocracy and the upper classes. The other artists listed are known for different styles and subjects. Sir Henry Raeburn was a Scottish painter known for his portraits of the lower classes and for his work in the Scottish style. George Romney was a British painter known for his portraits of the upper classes and for his work in the Neoclassical style. Allan Ramsay was a Scottish painter known for his portraits of the upper classes and for his work in the Scottish style. However, the painting in the image is not attributed to any of these artists. The painting is attributed to Sir Joshua Reynolds, who was a leading portrait painter of the 18th century and was known for his portraits of the aristocracy and the upper classes. The painting is attributed to Sir Joshua Re\", \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": false,
+  "inference_time_seconds": 7.69,
+  "error": null,
+  "used_fallback_extraction": false
+}

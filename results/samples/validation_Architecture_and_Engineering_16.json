@@ -1,0 +1,19 @@
+{
+  "sample_id": "validation_Architecture_and_Engineering_16",
+  "subject": "Architecture_and_Engineering",
+  "question": "The data shown below were obtained by time-lapse photography on a highway. Use regression analysis to fit these data to the Greenshields model and determine the capacity.",
+  "choices": [
+    "A: 1734veh/mi",
+    "B: 1744veh/mi",
+    "C: 1344veh/mi"
+  ],
+  "correct_answer": "B",
+  "prompt_sent": "Question: The data shown below were obtained by time-lapse photography on a highway. Use regression analysis to fit these data to the Greenshields model and determine the capacity.\nOptions:\nA: 1734veh/mi\nB: 1744veh/mi\nC: 1344veh/mi\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The Greenshields model for traffic flow is given by the equation: q = q_max * (1 - (D/D_f)), where q is the flow, q_max is the maximum flow, D is the density, and D_f is the density at which flow is maximum. The maximum flow occurs at the density where the derivative of flow with respect to density is zero. The Greenshields model is a linear relationship between density and flow, and the flow is given by q = q_max * (1 - D/D_f). The maximum flow occurs at D_f, and the flow at D_f is q_max. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow at D_f is q_max * (1 - D_f/D_f) = q_max * 0 = 0. The flow \",\"answer\": \"C\"}",
+  "extracted_answer": "C",
+  "extraction_succeeded": true,
+  "is_correct": false,
+  "inference_time_seconds": 10.97,
+  "error": null,
+  "used_fallback_extraction": false
+}

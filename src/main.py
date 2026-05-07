@@ -1,29 +1,45 @@
-import json
-import sys
-
 from src import config
+from src.adapters import get_model_adapter
 from src.data import get_evaluation_dataset
 from src.metrics import compute_summary, save_summary
-from src.model import load_model_and_processor
 from src.pipeline import evaluate_sample, load_completed_sample_ids, save_trajectory
 
 
+def _finalize():
+    """Compute summary + visualization from existing trajectories.jsonl."""
+    summary = compute_summary(config.TRAJECTORIES_PATH, max_samples=config.MAX_SAMPLES)
+    save_summary(summary, config.SUMMARY_PATH)
+    print(f"Summary saved to {config.SUMMARY_PATH}")
+
+    from src.visualization import plot_accuracy_chart, plot_runtime_metrics
+
+    plot_accuracy_chart(config.SUMMARY_PATH)
+    plot_runtime_metrics(config.SUMMARY_PATH)
+
+
 def main():
+    """Run the full evaluation pipeline end-to-end.
+
+    Resumes from any previously completed samples, loads the model and dataset,
+    evaluates remaining samples, and produces the summary metrics and
+    visualization chart.
+    """
     # 1. Resume state
     completed_ids = load_completed_sample_ids(config.TRAJECTORIES_PATH)
     n_completed = len(completed_ids)
     print(f"Found {n_completed} completed sample(s) in {config.TRAJECTORIES_PATH}.")
 
-    # 2. Over-cap guard
+    # 2. Over-cap guard — still finalize from existing data
     if n_completed >= config.MAX_SAMPLES:
         print(
             f"Cap already reached ({n_completed} samples >= {config.MAX_SAMPLES}). "
-            "Exiting without loading model or dataset."
+            "Skipping model loading and evaluation."
         )
-        sys.exit(0)
+        _finalize()
+        return
 
-    # 3. Load model & processor once
-    model, processor = load_model_and_processor()
+    # 3. Load adapter via factory
+    adapter = get_model_adapter("qwen_local")
 
     # 4. Load evaluation dataset (stratified + deterministically capped)
     dataset = get_evaluation_dataset(max_samples=config.MAX_SAMPLES)
@@ -42,7 +58,8 @@ def main():
     )
 
     if n_to_evaluate <= 0:
-        print("Nothing new to evaluate. Exiting.")
+        print("Nothing new to evaluate.")
+        _finalize()
         return
 
     # 5. Iterate and evaluate
@@ -60,7 +77,7 @@ def main():
 
         print(f"[{n_new + 1}/{n_to_evaluate}] Processing {sample_id} ...")
 
-        record = evaluate_sample(model, processor, sample)
+        record = evaluate_sample(adapter, sample)
 
         status = "✅" if record["is_correct"] else ("⚠️" if record["extraction_succeeded"] else "❌")
         print(
@@ -73,13 +90,11 @@ def main():
         completed_ids.add(sample_id)
         n_new += 1
 
-    # 6. Summary
+    # 6. Finalize
     total_unique = len(completed_ids)
     print(f"\nRun complete. Evaluated {n_new} new sample(s). Total unique: {total_unique}.")
 
-    summary = compute_summary(config.TRAJECTORIES_PATH, max_samples=config.MAX_SAMPLES)
-    save_summary(summary, config.SUMMARY_PATH)
-    print(f"Summary saved to {config.SUMMARY_PATH}")
+    _finalize()
 
 
 if __name__ == "__main__":

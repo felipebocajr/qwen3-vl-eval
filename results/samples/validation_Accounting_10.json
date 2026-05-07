@@ -1,0 +1,19 @@
+{
+  "sample_id": "validation_Accounting_10",
+  "subject": "Accounting",
+  "question": "Use the following cash flow data for Rocket Transport to find Rocket's (1)net cash provided by or used in investing activities (2)Net increase or decrease in cash for the year.",
+  "choices": [
+    "A: (1)$39,000 ; (2)84,000",
+    "B: (1)$36,000 ; (2)77,000",
+    "C: (1)$38,650 ; (2)82,910"
+  ],
+  "correct_answer": "A",
+  "prompt_sent": "Question: Use the following cash flow data for Rocket Transport to find Rocket's (1)net cash provided by or used in investing activities (2)Net increase or decrease in cash for the year.\nOptions:\nA: (1)$39,000 ; (2)84,000\nB: (1)$36,000 ; (2)77,000\nC: (1)$38,650 ; (2)82,910\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C>\"}.",
+  "raw_model_response": "{\"reasoning\": \"To determine the net cash provided by or used in investing activities, we need to identify the cash flows related to investing activities. These typically include the purchase or sale of long-term assets (like equipment) and investments. From the given data:\\n\\n- Purchase of bus: $33,000 (this is a cash outflow for investing activities)\\n- Sales of old equipment: $72,000 (this is a cash inflow from investing activities)\\n\\nThe net cash flow from investing activities is calculated as: Cash inflow from sales of equipment - Cash outflow for purchase of bus = $72,000 - $33,000 = $39,000.\\n\\nFor the net increase or decrease in cash for the year, we use the cash flow statement formula: Net increase in cash = Cash collections from customers + Cash payments to suppliers + Cash dividends + Interest paid on debt - Sales of old equipment - Purchase of bus - Repurchase of stock.\\n\\nLet's calculate:\\n- Cash collections from customers: $300,000\\n- Cash payments to suppliers: $95,000\\n- Cash dividends: $80,000\\n- Interest paid on debt: $25,000\\n- Sales of old equipment: $72,000\\n- Purchase of bus: $33,000\\n- Repurchase of stock: $55,000\\n\\nNet increase in cash = $300,000 + $95,000 + $80,000 + $25,000 - $72,000 - $\" , \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 9.5,
+  "error": null,
+  "used_fallback_extraction": false
+}

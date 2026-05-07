@@ -1,0 +1,15 @@
+{
+  "overall_accuracy": 0.41,
+  "per_subject_accuracy": {
+    "Accounting": 0.4,
+    "Architecture_and_Engineering": 0.28,
+    "Art": 0.56,
+    "Biology": 0.4
+  },
+  "parse_failure_rate": 0.05,
+  "inference_error_count": 0,
+  "average_inference_time_sec": 6.93,
+  "total_runtime_sec": 693.49,
+  "total_samples_evaluated": 100,
+  "max_samples": 100
+}

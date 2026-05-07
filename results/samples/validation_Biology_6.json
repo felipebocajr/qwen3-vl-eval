@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Biology_6",
+  "subject": "Biology",
+  "question": "In the phylogenetic tree shown, which organism is the most recent common ancestor of organisms 1 and 3?",
+  "choices": [
+    "A: Organism A",
+    "B: Organism B",
+    "C: Organism C",
+    "D: Organism D"
+  ],
+  "correct_answer": "B",
+  "prompt_sent": "Question: In the phylogenetic tree shown, which organism is the most recent common ancestor of organisms 1 and 3?\nOptions:\nA: Organism A\nB: Organism B\nC: Organism C\nD: Organism D\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"In a phylogenetic tree, the most recent common ancestor (MRCA) of two organisms is the most recent node from which both organisms diverged. Looking at the tree, organisms 1 and 3 share a common ancestor at the node labeled 'B'. This is because both organisms 1 and 3 are connected to node B, and node B is the most recent point of divergence between them. Organism A is the ancestor of both 1 and 2, but not 3. Organism C is the ancestor of 3 and 4, but not 1. Organism D is the ancestor of 4 and 5, but not 1 or 3. Therefore, the most recent common ancestor of organisms 1 and 3 is organism B.\", \"answer\": \"B\"}",
+  "extracted_answer": "B",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 4.35,
+  "error": null,
+  "used_fallback_extraction": false
+}

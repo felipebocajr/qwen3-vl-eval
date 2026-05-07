@@ -1,0 +1,21 @@
+{
+  "sample_id": "validation_Biology_13",
+  "subject": "Biology",
+  "question": "Blood glucose level is regulated by two antagonistic hormones, glucagon and insulin. The following graph shows the fluctuations in an individual's blood glucose level over a five hour period: . From the information provided above and your knowledge of physiology, which of the following statements are appropriate? I. Normal homeostatic mechanisms maintain a glucose concentration of approximately 1 mg/ml. II. Glucagon is released at points A and C. III. The individual eats a meal at point D. IV. Insulin is being released at points B and E.",
+  "choices": [
+    "A: I only",
+    "B: I and II only",
+    "C: I and IV only",
+    "D: I, II, and III only",
+    "E: II, III, and IV only"
+  ],
+  "correct_answer": "C",
+  "prompt_sent": "Question: Blood glucose level is regulated by two antagonistic hormones, glucagon and insulin. The following graph shows the fluctuations in an individual's blood glucose level over a five hour period: . From the information provided above and your knowledge of physiology, which of the following statements are appropriate? I. Normal homeostatic mechanisms maintain a glucose concentration of approximately 1 mg/ml. II. Glucagon is released at points A and C. III. The individual eats a meal at point D. IV. Insulin is being released at points B and E.\nOptions:\nA: I only\nB: I and II only\nC: I and IV only\nD: I, II, and III only\nE: II, III, and IV only\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D|E>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The graph shows blood glucose levels over time. Point A is at the beginning of the cycle, with a glucose level of approximately 1.0 mg/ml. This is the normal fasting level, which is maintained by homeostatic mechanisms. Therefore, statement I is correct.\\n\\nGlucagon is released when blood glucose levels are low, to raise them. This occurs at point C, where glucose levels are dropping. Therefore, statement II is correct.\\n\\nPoint D is the lowest point on the graph, indicating a drop in glucose level. This is consistent with the release of insulin after a meal, which lowers blood glucose. Therefore, statement III is correct.\\n\\nPoint B is the peak of the glucose level, which occurs after a meal. This is when insulin is released to lower glucose levels. Therefore, statement IV is correct.\\n\\nAll four statements are correct based on the physiological context of blood glucose regulation.\", \"answer\": \"E\"}",
+  "extracted_answer": "E",
+  "extraction_succeeded": true,
+  "is_correct": false,
+  "inference_time_seconds": 5.3,
+  "error": null,
+  "used_fallback_extraction": false
+}

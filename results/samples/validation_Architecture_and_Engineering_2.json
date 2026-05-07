@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Architecture_and_Engineering_2",
+  "subject": "Architecture_and_Engineering",
+  "question": "Compare the scales of photography for the area recorded and the strip widths given by cameras A and B at the same flying heights.How many photographs would be taken by the camera A in covering a strip 16 km long at a flying height of 1350 m? The longitudinal overlap is 60%.",
+  "choices": [
+    "A: 35.567 $\\approx$ 36",
+    "B: 36.567 $\\approx$ 37",
+    "C: 34.567 $\\approx$ 35",
+    "D: 37.567 $\\approx$ 38"
+  ],
+  "correct_answer": "A",
+  "prompt_sent": "Question: Compare the scales of photography for the area recorded and the strip widths given by cameras A and B at the same flying heights.How many photographs would be taken by the camera A in covering a strip 16 km long at a flying height of 1350 m? The longitudinal overlap is 60%.\nOptions:\nA: 35.567 $\\approx$ 36\nB: 36.567 $\\approx$ 37\nC: 34.567 $\\approx$ 35\nD: 37.567 $\\approx$ 38\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"To determine how many photographs camera A would take to cover a 16 km long strip at a flying height of 1350 m, we need to calculate the length of the strip that each photograph covers, considering the overlap. First, we calculate the area of the photograph in terms of the ground coverage. The format of camera A is 180 mm × 180 mm, which is 0.18 m × 0.18 m. The focal length is 210 mm, which is 0.21 m. The field of view (FOV) of camera A is determined by the focal length and the format. The FOV in radians is given by the formula: FOV = 2 * arctan(format / (2 * focal length)). The FOV in degrees is then converted to radians. The length of the strip that each photograph covers is the length of the strip divided by the number of photographs. The number of photographs is then calculated by dividing the total length of the strip by the length of the strip covered by each photograph. The longitudinal overlap is 60%, so the effective length of the strip covered by each photograph is 40% of the total length of the strip. The number of photographs is then calculated by dividing the total length of the strip by the length of the strip covered by each photograph. The number of photographs is 1\", \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 7.17,
+  "error": null,
+  "used_fallback_extraction": false
+}

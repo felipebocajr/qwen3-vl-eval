@@ -1,0 +1,19 @@
+{
+  "sample_id": "validation_Accounting_11",
+  "subject": "Accounting",
+  "question": "Donna Donie, CFA, has a client who believes the common stock price of TRT Materials (currently $58 per share) could move substantially in either direction in reaction to an expected court decision involving the company. The client currently owns no TRT shares, but asks Donie for advice about implementing a strangle strategy to capitalize on the possible stock price movement. A strangle is a portfolio of a put and a call with different exercise prices but the same expiration date. Donie gathers the TRT option-pricing data:  Calculate, at expiration for long strangle strategy, the Maximum possible loss per share.",
+  "choices": [
+    "A: $9.00",
+    "B: $5.00",
+    "C: the Maximum  possible loss is unlimited"
+  ],
+  "correct_answer": "A",
+  "prompt_sent": "Question: Donna Donie, CFA, has a client who believes the common stock price of TRT Materials (currently $58 per share) could move substantially in either direction in reaction to an expected court decision involving the company. The client currently owns no TRT shares, but asks Donie for advice about implementing a strangle strategy to capitalize on the possible stock price movement. A strangle is a portfolio of a put and a call with different exercise prices but the same expiration date. Donie gathers the TRT option-pricing data:  Calculate, at expiration for long strangle strategy, the Maximum possible loss per share.\nOptions:\nA: $9.00\nB: $5.00\nC: the Maximum  possible loss is unlimited\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C>\"}.",
+  "raw_model_response": "{\"reasoning\": \"A strangle strategy involves buying both a call and a put option with different strike prices but the same expiration date. The client is asking about the maximum possible loss per share for a long strangle. The strategy is to buy a call option with a strike price of $60 and a put option with a strike price of $55. The stock price is currently $58. The maximum possible loss occurs when the stock price moves in the opposite direction of the options, but the worst-case scenario is when the stock price moves to the lowest possible value that still allows the options to be exercised. The call option has a strike price of $60, so if the stock price is below $60, the call option will be worthless. The put option has a strike price of $55, so if the stock price is above $55, the put option will be worthless. The maximum loss occurs when the stock price is below $55, so the put option will be exercised and the call option will be worthless. The maximum loss per share is the sum of the loss from the put option and the loss from the call option. The put option has a strike price of $55, so if the stock price is below $55, the put option will be exercised and the loss is the difference in the\" , \"answer\": \"C\"}",
+  "extracted_answer": "C",
+  "extraction_succeeded": true,
+  "is_correct": false,
+  "inference_time_seconds": 7.28,
+  "error": null,
+  "used_fallback_extraction": false
+}

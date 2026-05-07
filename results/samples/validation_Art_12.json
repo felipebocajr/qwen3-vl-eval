@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Art_12",
+  "subject": "Art",
+  "question": "Who created ?",
+  "choices": [
+    "A: PAUL CÉZANNE",
+    "B: EDVARD MUNCH",
+    "C: EDGAR DEGAS",
+    "D: ANDY WARHOL"
+  ],
+  "correct_answer": "A",
+  "prompt_sent": "Question: Who created ?\nOptions:\nA: PAUL CÉZANNE\nB: EDVARD MUNCH\nC: EDGAR DEGAS\nD: ANDY WARHOL\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The painting in the image is known as 'The Last Supper' and is a famous work by Paul Cézanne. The style of the painting, with its thick brushstrokes and dramatic use of color, is characteristic of Cézanne's work. The other artists listed are known for different works, such as Munch for 'The Scream', Degas for 'The Luncheon on the Grass', and Warhol for 'The Breakfast'.\", \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 3.09,
+  "error": null,
+  "used_fallback_extraction": false
+}

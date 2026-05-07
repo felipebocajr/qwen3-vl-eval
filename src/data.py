@@ -4,13 +4,13 @@ from src import config
 
 
 def select_stratified_samples(subset_datasets: list, max_samples: int):
-    """Return a deterministically stratified subset.
+    """Return a deterministically stratified subset of MMMU samples.
 
-    Each dataset in ``subset_datasets`` corresponds to one subject.
-    Quotas are assigned proportionally (equal split by default) in the
-    order the datasets are given.  If a dataset is smaller than its quota
-    the shortfall is *not* backfilled from other subjects so the total
-    may be slightly below ``max_samples``.
+    Each dataset in *subset_datasets* corresponds to one subject. Quotas are
+    assigned proportionally (equal split by default) in the order the datasets
+    are given. If a dataset is smaller than its quota, the shortfall is **not**
+    backfilled from other subjects, so the total may be slightly below
+    *max_samples*.
     """
     num_subjects = len(subset_datasets)
     quotas = config.get_subject_quotas(max_samples, num_subjects)
@@ -31,9 +31,9 @@ def select_stratified_samples(subset_datasets: list, max_samples: int):
 def get_evaluation_dataset(max_samples: int = config.MAX_SAMPLES):
     """Load the MMMU validation subset for selected subjects.
 
-    Subjects are loaded in a fixed alphabetical order, and samples are
-    selected **proportionally/stratified** across subjects so that each
-    subject contributes roughly ``max_samples / num_subjects`` items.
+    Subjects are loaded in a fixed alphabetical order, and samples are selected
+    proportionally (stratified) across subjects so that each subject contributes
+    roughly ``max_samples / num_subjects`` items.
     """
     subset_datasets = []
     for subject in sorted(config.SUBJECTS):

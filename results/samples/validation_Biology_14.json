@@ -1,0 +1,21 @@
+{
+  "sample_id": "validation_Biology_14",
+  "subject": "Biology",
+  "question": "In Ayrshire cattle, the mahogany/red locus is an autosomal gene. In both sexes, mahogany homozygotes are mahogany colored, and red homozygotes are red. However, the mahogany/red heterozygote is mahogany if male and red if female. Here is a pedigree for an Ayrshire family that is of great interest to Farmer MacDonald. (In the pedigree, open circles and squares indicate the mahogany phenotype; filled indicate red.) Although Elmer has long ago become a huge pile of Big Macs, Farmer MacDonald has frozen a good supply of Elmer's semen and has used it to artificially inseminate Elmira. What is the probability that Elmira will produce a mahogany female calf?",
+  "choices": [
+    "A: 1/2",
+    "B: 1/4",
+    "C: 3/4",
+    "D: 1/8",
+    "E: 1/16"
+  ],
+  "correct_answer": "E",
+  "prompt_sent": "Question: In Ayrshire cattle, the mahogany/red locus is an autosomal gene. In both sexes, mahogany homozygotes are mahogany colored, and red homozygotes are red. However, the mahogany/red heterozygote is mahogany if male and red if female. Here is a pedigree for an Ayrshire family that is of great interest to Farmer MacDonald. (In the pedigree, open circles and squares indicate the mahogany phenotype; filled indicate red.) Although Elmer has long ago become a huge pile of Big Macs, Farmer MacDonald has frozen a good supply of Elmer's semen and has used it to artificially inseminate Elmira. What is the probability that Elmira will produce a mahogany female calf?\nOptions:\nA: 1/2\nB: 1/4\nC: 3/4\nD: 1/8\nE: 1/16\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D|E>\"}.",
+  "raw_model_response": "{\"reasoning\": \"First, let's analyze the pedigree to determine the genotypes of the parents. Elsie is a female with a mahogany phenotype (open circle), and Elmer is a male with a red phenotype (square). Since the mahogany/red locus is autosomal, and the heterozygote shows a mahogany phenotype in males and red in females, we can deduce the genotypes. Elmer is red, so his genotype is rr. Elsie is mahogany, so her genotype is either MM or Mm. Since she is a female with a mahogany phenotype, and the heterozygote is mahogany in males, we can infer that Elsie must be MM (homozygous mahogany). This is because if she were Mm, she would be a mahogany female, but the question states that the heterozygote is mahogany in males. However, the key point is that the heterozygote is mahogany in males and red in females. Since Elmer is red (rr), and Elsie is mahogany (MM), their offspring will be Mm. Therefore, Elmer's genotype is rr, and Elsie's genotype is MM. The offspring of Elmer and Elsie will be Mm. Therefore, the probability that Elmira will produce a mahogany female calf is 1/2. This is because the probability of a female calf being mahogany is 1/2, since the genotype is Mm, and the probability of a female\" , \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": false,
+  "inference_time_seconds": 7.75,
+  "error": null,
+  "used_fallback_extraction": false
+}

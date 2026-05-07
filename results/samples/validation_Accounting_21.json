@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Accounting_21",
+  "subject": "Accounting",
+  "question": "An all-equity firm is considering the following projects:  The T-bill rate is 3.5 percent, and the expected return on the market is 11 percent.Which projects would be incorrectly accepted or rejected if the firm's overall cost of capital was used as a hurdle rate?",
+  "choices": [
+    "A: Project X would be incorrectly rejected; Project Z would be incorrectly accepted.",
+    "B: Project Y would be incorrectly rejected; Project X would be incorrectly accepted.",
+    "C: Project Z would be incorrectly rejected; Project X would be incorrectly accepted.",
+    "D: No project would be incorrectly rejected; Project Z would be incorrectly accepted."
+  ],
+  "correct_answer": "A",
+  "prompt_sent": "Question: An all-equity firm is considering the following projects:  The T-bill rate is 3.5 percent, and the expected return on the market is 11 percent.Which projects would be incorrectly accepted or rejected if the firm's overall cost of capital was used as a hurdle rate?\nOptions:\nA: Project X would be incorrectly rejected; Project Z would be incorrectly accepted.\nB: Project Y would be incorrectly rejected; Project X would be incorrectly accepted.\nC: Project Z would be incorrectly rejected; Project X would be incorrectly accepted.\nD: No project would be incorrectly rejected; Project Z would be incorrectly accepted.\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"To determine which projects would be incorrectly accepted or rejected, we need to calculate the required rate of return (cost of capital) for each project using the Capital Asset Pricing Model (CAPM). The CAPM formula is: Required Return = Risk-Free Rate + Beta * (Market Return - Risk-Free Rate). The risk-free rate is 3.5%, and the market return is 11%. Let's calculate the required return for each project:\\n\\n1. Project W: Beta = 0.80\\n   Required Return = 3.5% + 0.80 * (11% - 3.5%) = 3.5% + 0.80 * 7.5% = 3.5% + 6.0% = 9.5%\\n   IRR = 9.4% (given)\\n   Since 9.4% < 9.5%, Project W's IRR is less than the required return. Therefore, it would be incorrectly accepted.\\n\\n2. Project X: Beta = 0.95\\n   Required Return = 3.5% + 0.95 * (11% - 3.5%) = 3.5% + 0.95 * 7.5% = 3.5% + 7.125% = 10.625%\\n   IRR = 10.9% (given)\\n   Since 10.9% > 10.625%, Project X's IRR is greater than the required return. Therefore, it would be incorrectly rejected.\\n\\n3. Project Y: Beta = 1.15\\n   Required Return = 3.5% + 1.15 * (11% - 3.5%) = 3.5% + 1.15 * 7.5% = 3.5% + 8.625% = 12.125%\\n   IRR = 13.0% (given)\\n   Since 13.0% > 12.125%, Project Y's IRR is greater than the required return. Therefore, it would be incorrectly rejec-\", \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 11.68,
+  "error": null,
+  "used_fallback_extraction": false
+}

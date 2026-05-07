@@ -1,0 +1,19 @@
+{
+  "sample_id": "validation_Art_16",
+  "subject": "Art",
+  "question": "True or False: The name of  is 'This is not a Pipe' by René Magritte",
+  "choices": [
+    "A: True",
+    "B: False",
+    "C: No enough evidence"
+  ],
+  "correct_answer": "B",
+  "prompt_sent": "Question: True or False: The name of  is 'This is not a Pipe' by René Magritte\nOptions:\nA: True\nB: False\nC: No enough evidence\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The image shows a painting titled 'This is not a Pipe' by the artist René Magritte. The text at the bottom of the painting reads 'Ceci n'est pas une pipe,' which is French for 'This is not a pipe.' The painting is a well-known work by Magritte, and the title is directly associated with the artwork. Therefore, the statement is true.\", \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": false,
+  "inference_time_seconds": 2.69,
+  "error": null,
+  "used_fallback_extraction": false
+}

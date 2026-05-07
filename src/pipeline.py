@@ -1,3 +1,10 @@
+"""Evaluation pipeline loop with resume support and trajectory persistence.
+
+Orchestrates per-sample evaluation: image extraction, prompt construction,
+model inference, answer parsing, and result recording. Supports resuming from
+a partially complete ``trajectories.jsonl`` file.
+"""
+
 import ast
 import json
 import os
@@ -8,12 +15,14 @@ from typing import List
 from PIL import Image
 
 from src import config
-from src.model import run_inference
 from src.parser import extract_answer
 
 
 def extract_images(sample: dict) -> List[Image.Image]:
-    """Extract non-None PIL images from an MMMU sample."""
+    """Extract up to 7 images from an MMMU sample dict, converting to RGB.
+
+    Preserves the original image format metadata if available.
+    """
     images = []
     for i in range(1, 8):
         img = sample.get(f"image_{i}")
@@ -21,12 +30,10 @@ def extract_images(sample: dict) -> List[Image.Image]:
             original_format = getattr(img, "format", None)
             if img.mode != "RGB":
                 img = img.convert("RGB")
-            # convert() strips the .format attribute which Outlines' inputs.Image requires
-            if getattr(img, "format", None) is None and original_format:
+            if img.format is None and original_format:
                 img.format = original_format
             images.append(img)
     return images
-
 
 def parse_options(options_str: str) -> List[str]:
     """Parse MMMU options string into a Python list."""
@@ -75,7 +82,7 @@ def infer_subject(sample_id: str) -> str:
     return "unknown"
 
 
-def evaluate_sample(model, processor, sample) -> dict:
+def evaluate_sample(adapter, sample) -> dict:
     """
     Run the full evaluation pipeline on a single dataset sample.
 
@@ -103,16 +110,14 @@ def evaluate_sample(model, processor, sample) -> dict:
         "is_correct": False,
         "inference_time_seconds": None,
         "error": None,
+        "used_fallback_extraction": False,
     }
 
     try:
         start = time.perf_counter()
-        raw_answer = run_inference(
-            model,
-            processor,
-            images,
+        raw_answer = adapter.generate_answer(
             prompt,
-            num_options=len(options),
+            images,
             max_new_tokens=config.MAX_NEW_TOKENS,
         )
         elapsed = time.perf_counter() - start
@@ -122,7 +127,23 @@ def evaluate_sample(model, processor, sample) -> dict:
         extracted, succeeded = extract_answer(raw_answer, num_choices=len(options))
         record["extracted_answer"] = extracted
         record["extraction_succeeded"] = succeeded
+
+        # Detect if fallback was used: if extraction succeeded but the raw
+        # response isn't valid JSON, the regex fallback recovered the answer.
+        if succeeded:
+            try:
+                json.loads(raw_answer.strip())
+            except json.JSONDecodeError:
+                record["used_fallback_extraction"] = True
+                print(f"    ⚠️  Fallback extraction used for {sample_id}")
+
         record["is_correct"] = succeeded and (extracted == correct_answer)
+
+        # Explicitly release PIL image references so they can be garbage
+        # collected before the next sample.
+        for img in images:
+            img.close()
+        images.clear()
     except Exception as exc:
         record["error"] = str(exc)
 
@@ -150,11 +171,19 @@ def load_completed_sample_ids(jsonl_path: str) -> set[str]:
 
 
 def save_trajectory(record: dict, out_dir: str = "results"):
-    """Save trajectory record as individual JSON and append to JSONL."""
+    """Persist a trajectory record to both a per-sample JSON file and the aggregate JSONL.
+
+    Args:
+        record: The evaluation record dictionary.
+        out_dir: Base output directory (defaults to ``"results"``).
+    """
     os.makedirs(out_dir, exist_ok=True)
 
     sample_id = record["sample_id"]
-    json_path = os.path.join(out_dir, f"{sample_id}.json")
+    samples_dir = os.path.join(out_dir, "samples")
+    os.makedirs(samples_dir, exist_ok=True)
+
+    json_path = os.path.join(samples_dir, f"{sample_id}.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(record, f, indent=2, ensure_ascii=False)
     print(f"Saved record to {json_path}")

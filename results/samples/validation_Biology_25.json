@@ -1,0 +1,21 @@
+{
+  "sample_id": "validation_Biology_25",
+  "subject": "Biology",
+  "question": "Consider the diagram in  regarding a mountainous region. The diagram shows the average winter temperature (left-hand y-axis) at different altitudes (x-axis) and the abundance of three tree species (right-hand y-axis) at different altitudes (x-axis). Which species is/are found below an altitude of 500m?",
+  "choices": [
+    "A: Species 1 only",
+    "B: Species 2 only",
+    "C: Species 3 only",
+    "D: Species 1 and 2 only",
+    "E: Species 2 and 3 only"
+  ],
+  "correct_answer": "A",
+  "prompt_sent": "Question: Consider the diagram in  regarding a mountainous region. The diagram shows the average winter temperature (left-hand y-axis) at different altitudes (x-axis) and the abundance of three tree species (right-hand y-axis) at different altitudes (x-axis). Which species is/are found below an altitude of 500m?\nOptions:\nA: Species 1 only\nB: Species 2 only\nC: Species 3 only\nD: Species 1 and 2 only\nE: Species 2 and 3 only\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D|E>\"}.",
+  "raw_model_response": "{\"reasoning\": \"To determine which species are found below an altitude of 500 meters, we need to examine the graph. The x-axis represents altitude in meters, and the y-axis on the left shows average temperature. The right y-axis shows the abundance of the species.\\n\\nWe are looking for species that are present (i.e., have a positive abundance) at altitudes below 500 meters.\\n\\n- Species 1: The curve for Species 1 is present at altitudes below 500 meters. It is visible on the graph from 0 to 500 meters, and its abundance is positive at these altitudes.\\n- Species 2: The curve for Species 2 is also present at altitudes below 500 meters. It is visible from 0 to 1000 meters, and its abundance is positive at these altitudes.\\n- Species 3: The curve for Species 3 is present at altitudes above 1500 meters, so it is not found below 500 meters.\\n\\nTherefore, Species 1 and Species 2 are found below an altitude of 500 meters.\\n\\nThe correct answer is D: Species 1 and 2 only.\", \"answer\": \"D\"}",
+  "extracted_answer": "D",
+  "extraction_succeeded": true,
+  "is_correct": false,
+  "inference_time_seconds": 6.65,
+  "error": null,
+  "used_fallback_extraction": false
+}

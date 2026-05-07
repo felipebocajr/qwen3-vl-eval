@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Architecture_and_Engineering_23",
+  "subject": "Architecture_and_Engineering",
+  "question": "The following survey was carried out from the bottom of a shaft at A, along an existing tunnel to the bottom of a shaft at E.If the two shafts are to be connected by a straight tunnel, calculate the bearing A to E and the grade.",
+  "choices": [
+    "A: Bearing AE = 87°,47':Grade = 1.78 in 652.33 = 1 in 413",
+    "B: Bearing AE = 87°,47':Grade = 1.88 in 652.33 = 1 in 413",
+    "C: Bearing AE = 87°,47':Grade = 1.68 in 652.33 = 1 in 413",
+    "D: Bearing AE = 87°,47':Grade = 1.58 in 652.33 = 1 in 413"
+  ],
+  "correct_answer": "D",
+  "prompt_sent": "Question: The following survey was carried out from the bottom of a shaft at A, along an existing tunnel to the bottom of a shaft at E.If the two shafts are to be connected by a straight tunnel, calculate the bearing A to E and the grade.\nOptions:\nA: Bearing AE = 87°,47':Grade = 1.78 in 652.33 = 1 in 413\nB: Bearing AE = 87°,47':Grade = 1.88 in 652.33 = 1 in 413\nC: Bearing AE = 87°,47':Grade = 1.68 in 652.33 = 1 in 413\nD: Bearing AE = 87°,47':Grade = 1.58 in 652.33 = 1 in 413\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"To calculate the bearing and grade of the tunnel from A to E, we need to analyze the survey data provided. The survey is conducted from A to E along a series of lines (AB, BC, CD, DE). The data includes angles, measured distances, and remarks.\\n\\nFirst, we need to determine the direction of the tunnel from A to E. The angles are given in degrees and minutes. The line AB has a bearing of 70°30', BC has 0°, CD has 154°12', and DE has 90°. The bearing of the line from A to B is 70°30', from B to C is 0° (which is 0°00'), from C to D is 154°12', and from D to E is 90°00'.\\n\\nThe bearing of the line from A to E is the cumulative bearing of the lines AB, BC, CD, and DE. We need to calculate the total change in direction from A to E.\\n\\nThe bearing of AB is 70°30'. The bearing of BC is 0°00'. The bearing of CD is 154°12'. The bearing of DE is 90°00'.\\n\\nTo find the total bearing, we need to add the bearings of the lines in sequence. However, we need to consider the direction of the tunnel. The tunnel goes from A to B, then B to C, then C to D, then D to E.\\n\\nThe bearing of the line from A to B is 70°30'. The bearing of the line from B to C is 0°00'. The bearing of the line from C to D is 154°12'.\\n\" , \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": false,
+  "inference_time_seconds": 9.34,
+  "error": null,
+  "used_fallback_extraction": false
+}

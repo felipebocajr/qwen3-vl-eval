@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Accounting_12",
+  "subject": "Accounting",
+  "question": "Hicks Products produces and sells patio furniture through a national dealership network. They purchase raw materials from a variety of suppliers and all manufacturing, and assembly work is performed at their plant outside of Cleveland, Ohio. They recorded these costs for the year ending December 31, 2017. What is total revenue?",
+  "choices": [
+    "A: $3,100,000",
+    "B: $2,616,000",
+    "C: $2,474,000",
+    "D: $484,000"
+  ],
+  "correct_answer": "A",
+  "prompt_sent": "Question: Hicks Products produces and sells patio furniture through a national dealership network. They purchase raw materials from a variety of suppliers and all manufacturing, and assembly work is performed at their plant outside of Cleveland, Ohio. They recorded these costs for the year ending December 31, 2017. What is total revenue?\nOptions:\nA: $3,100,000\nB: $2,616,000\nC: $2,474,000\nD: $484,000\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The question asks for the total revenue. Looking at the provided list of costs, the only line item that represents revenue is 'Sales revenue', which is listed as $3,100,000. The other items listed (depreciation, advertising, salaries, cost of goods sold, rent) are all expenses. Therefore, the total revenue is $3,100,000.\", \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 2.68,
+  "error": null,
+  "used_fallback_extraction": false
+}

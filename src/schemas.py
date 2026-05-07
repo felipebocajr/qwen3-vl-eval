@@ -7,11 +7,12 @@ from outlines.types import JsonSchema
 
 
 def make_response_model(num_choices: int):
-    """Create a Pydantic model whose ``answer`` field allows exactly the
-    letters ``A`` … up to the number of choices provided.
+    """Create a Pydantic model with a constrained answer field.
 
-    For non-multiple-choice questions (``num_choices <= 0``) the answer
-    field is a plain ``str``.
+    The ``answer`` field is restricted to the option letters A through the
+    letter corresponding to the number of choices (e.g., A-D for 4 choices).
+    For non-multiple-choice questions (``num_choices <= 0``), the answer field
+    is an unconstrained string.
     """
     if num_choices <= 0:
         return create_model(
@@ -20,6 +21,7 @@ def make_response_model(num_choices: int):
                 str,
                 Field(
                     default="",
+                    max_length=1200,
                     description="Step-by-step reasoning that leads to the final answer.",
                 ),
             ),
@@ -38,6 +40,7 @@ def make_response_model(num_choices: int):
             str,
             Field(
                 default="",
+                max_length=1200,
                 description="Step-by-step reasoning that leads to the final answer.",
             ),
         ),
@@ -49,10 +52,10 @@ def make_response_model(num_choices: int):
 
 
 def make_response_schema(num_choices: int) -> JsonSchema:
-    """Return an Outlines ``JsonSchema`` term that constrains generation.
+    """Return an Outlines JsonSchema that constrains structured generation.
 
-    The schema limits the ``answer`` field to the exact set of option
-    letters present in the current MMMU sample.
+    Limits the ``answer`` field to the exact set of option letters valid for
+    the current MMMU sample (e.g., A-D for 4 choices).
     """
     model_cls = make_response_model(num_choices)
     return JsonSchema(model_cls)

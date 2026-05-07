@@ -4,10 +4,12 @@ from collections import defaultdict
 
 
 def compute_summary(jsonl_path: str, max_samples: int = 100) -> dict:
-    """Compute aggregate metrics from trajectories.jsonl.
+    """Compute aggregate metrics from the trajectories JSONL file.
 
-    Only the first ``max_samples`` unique records (in file order) are
-    considered, matching the intended evaluation cap.
+    Only the first *max_samples* unique records (in file order) are considered,
+    matching the intended evaluation cap. Returns a dictionary with overall
+    accuracy, per-subject accuracy, parse failure rate, inference error count,
+    average inference time, total runtime, and total samples evaluated.
     """
     if not os.path.exists(jsonl_path):
         return {
@@ -99,7 +101,7 @@ def compute_summary(jsonl_path: str, max_samples: int = 100) -> dict:
 
 
 def save_summary(summary: dict, path: str):
-    """Write summary dict to JSON file."""
+    """Write a summary dictionary to a JSON file, creating parent directories as needed."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)

@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Architecture_and_Engineering_12",
+  "subject": "Architecture_and_Engineering",
+  "question": "S is a satellite station to a triangulation station A at a distance of 12 m from A.From S the following bearings were observed:A = 0°00'00\";B = 143°36'20\";C = 238°24'48\";D = 307°18'54\".The lengths of lines AB, AC, and AD were measured and found to be 3190.32 m, 4085.15,and 3108.60 m,respectively. Determine the directions of B, C, and D from A.",
+  "choices": [
+    "A: B = 143°44'00.34\";C = 238°10'11.87\";D = 307°08'20.76\"",
+    "B: B = 143°44'00.34\";C = 238°14'11.87\";D = 307°08'20.76\"",
+    "C: B = 143°44'00.34\";C = 238°16'11.87\";D = 307°08'20.76\"",
+    "D: B = 143°44'00.34\";C = 238°12'11.87\";D = 307°08'20.76\""
+  ],
+  "correct_answer": "C",
+  "prompt_sent": "Question: S is a satellite station to a triangulation station A at a distance of 12 m from A.From S the following bearings were observed:A = 0°00'00\";B = 143°36'20\";C = 238°24'48\";D = 307°18'54\".The lengths of lines AB, AC, and AD were measured and found to be 3190.32 m, 4085.15,and 3108.60 m,respectively. Determine the directions of B, C, and D from A.\nOptions:\nA: B = 143°44'00.34\";C = 238°10'11.87\";D = 307°08'20.76\"\nB: B = 143°44'00.34\";C = 238°14'11.87\";D = 307°08'20.76\"\nC: B = 143°44'00.34\";C = 238°16'11.87\";D = 307°08'20.76\"\nD: B = 143°44'00.34\";C = 238°12'11.87\";D = 307°08'20.76\"\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"We are given a triangulation setup with a satellite station S, and we need to determine the directions of points B, C, and D from station A. The key information is:\\n\\n- S is 12 m from A.\\n- Bearings from S to A, B, C, D are given: A = 0°00'00\", \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": false,
+  "inference_time_seconds": 2.46,
+  "error": null,
+  "used_fallback_extraction": false
+}

@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Art_6",
+  "subject": "Art",
+  "question": "What is  known as?",
+  "choices": [
+    "A: Lady with an Ermine",
+    "B: First Steps",
+    "C: Nude Descending a Staircase, No. 2",
+    "D: Woman with a parasol"
+  ],
+  "correct_answer": "D",
+  "prompt_sent": "Question: What is  known as?\nOptions:\nA: Lady with an Ermine\nB: First Steps\nC: Nude Descending a Staircase, No. 2\nD: Woman with a parasol\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The painting in the image features a woman holding a parasol and a child in a field. The style of the painting, with its impressionistic brushwork and focus on light and color, is characteristic of the artist Claude Monet. The title of the painting is 'Woman with a parasol', which is a well-known work by Monet. The other options refer to different paintings by different artists or are not related to the image.\", \"answer\": \"D\"}",
+  "extracted_answer": "D",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 3.12,
+  "error": null,
+  "used_fallback_extraction": false
+}

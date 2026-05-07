@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Art_25",
+  "subject": "Art",
+  "question": "Who painted ?",
+  "choices": [
+    "A: Claude Monet",
+    "B: Henri Matisse",
+    "C: Andy Warhol",
+    "D: Georgia O'Keefe"
+  ],
+  "correct_answer": "C",
+  "prompt_sent": "Question: Who painted ?\nOptions:\nA: Claude Monet\nB: Henri Matisse\nC: Andy Warhol\nD: Georgia O'Keefe\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The image contains the text 'i think everybody should like everybody.' and a portrait of a person wearing sunglasses. This is a well-known quote and image associated with Andy Warhol, who was famous for his pop art style and often used celebrity imagery. The signature in the bottom right corner is characteristic of Andy Warhol's work. The other artists listed are known for different styles and are not associated with this specific quote or image.\", \"answer\": \"C\"}",
+  "extracted_answer": "C",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 2.73,
+  "error": null,
+  "used_fallback_extraction": false
+}

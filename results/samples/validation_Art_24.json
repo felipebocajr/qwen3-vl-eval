@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Art_24",
+  "subject": "Art",
+  "question": "Read the paragraph below regarding  and then answer the questions that follow. Elizabeth Catlett's sculpture tells a warm and tender story. It is a story of the unbreakable bond that unites a mother and her child. Like a good storyteller, Catlett is economical in her use of imagery. There are no visual frills or adornments, no reliance on gaudy color or superfluous detail. There is little more than fluidity of line and grace. Yet the sculpture speaks volumes about the deepest and most profound of all human relationships. Personification is a literary device in which human qualities are ascribed to a nonhuman subject. Which statement best captures the personification in the passage?",
+  "choices": [
+    "A: The bond between mother and child is described as unbreakable.",
+    "B: A sculpture is described as speaking.",
+    "C: The artist is described as a storyteller.",
+    "D: A sculpture is without frills."
+  ],
+  "correct_answer": "B",
+  "prompt_sent": "Question: Read the paragraph below regarding  and then answer the questions that follow. Elizabeth Catlett's sculpture tells a warm and tender story. It is a story of the unbreakable bond that unites a mother and her child. Like a good storyteller, Catlett is economical in her use of imagery. There are no visual frills or adornments, no reliance on gaudy color or superfluous detail. There is little more than fluidity of line and grace. Yet the sculpture speaks volumes about the deepest and most profound of all human relationships. Personification is a literary device in which human qualities are ascribed to a nonhuman subject. Which statement best captures the personification in the passage?\nOptions:\nA: The bond between mother and child is described as unbreakable.\nB: A sculpture is described as speaking.\nC: The artist is described as a storyteller.\nD: A sculpture is without frills.\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The question asks for the statement that best captures 'personification' in the passage. Personification is the attribution of human qualities to non-human subjects. In the passage, the artist is described as a 'good storyteller' who 'is economical in her use of imagery' and 'speaks volumes about the deepest and most profound of all human relationships.' The key is to identify a human quality being attributed to the sculpture. The sculpture is described as 'speaking,' which implies it has human qualities, such as the ability to communicate or express emotions. This is a form of personification, as the sculpture is being given the human quality of speaking. The other options do not involve attributing human qualities to the non-human subject (the sculpture).\", \"answer\": \"B\"}",
+  "extracted_answer": "B",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 4.23,
+  "error": null,
+  "used_fallback_extraction": false
+}

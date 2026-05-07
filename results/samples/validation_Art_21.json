@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Art_21",
+  "subject": "Art",
+  "question": "This depiction of  was a popular subject matter painted by several artists in the 16th and 17th centuries...  who painted this one?",
+  "choices": [
+    "A: Peter Paul Rubens 1675",
+    "B: Caravaggio 1635",
+    "C: Artemisia Gentileschi 1612-13",
+    "D: Francisco de Zurbarán 1614"
+  ],
+  "correct_answer": "C",
+  "prompt_sent": "Question: This depiction of  was a popular subject matter painted by several artists in the 16th and 17th centuries...  who painted this one?\nOptions:\nA: Peter Paul Rubens 1675\nB: Caravaggio 1635\nC: Artemisia Gentileschi 1612-13\nD: Francisco de Zurbarán 1614\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The painting depicted in the image shows a dramatic scene of a woman attacking a man with a knife, with another woman observing. This is a well-known painting by Artemisia Gentileschi, titled 'The Ecstasy of Saint Teresa' is not the correct title. The correct title of the painting is 'The Martyrdom of Saint John the Baptist', which is a famous work by Artemisia Gentileschi. The painting is known for its intense realism and emotional depth, and it was painted in the early 17th century, around 1612-13. The other artists listed are not known for this particular subject matter. Therefore, the correct answer is C.\", \"answer\": \"C\"}",
+  "extracted_answer": "C",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 4.4,
+  "error": null,
+  "used_fallback_extraction": false
+}

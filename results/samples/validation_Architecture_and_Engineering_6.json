@@ -1,0 +1,20 @@
+{
+  "sample_id": "validation_Architecture_and_Engineering_6",
+  "subject": "Architecture_and_Engineering",
+  "question": "Two consecutive photographs were taken with a camera of focal length 200 mm mounted on an airplane flying at a height of 1500 m. The overlap was exactly 60% and the size of prints was 250 mm 250 mm. The flying height was same in case of both the exposures and the flight was balanced so that there was no drift. The ground was flat and was 250 m above the mean sea level. Determine the scale of the photograph and the length of the air base.",
+  "choices": [
+    "A: The scale of the photographs is 1 cm = 62.5 m;Air base = 625 m",
+    "B: The scale of the photographs is 1 cm = 68.5 m;Air base = 625 m",
+    "C: The scale of the photographs is 1 cm = 66.5 m;Air base = 625 m",
+    "D: The scale of the photographs is 1 cm = 64.5 m;Air base = 625 m"
+  ],
+  "correct_answer": "A",
+  "prompt_sent": "Question: Two consecutive photographs were taken with a camera of focal length 200 mm mounted on an airplane flying at a height of 1500 m. The overlap was exactly 60% and the size of prints was 250 mm 250 mm. The flying height was same in case of both the exposures and the flight was balanced so that there was no drift. The ground was flat and was 250 m above the mean sea level. Determine the scale of the photograph and the length of the air base.\nOptions:\nA: The scale of the photographs is 1 cm = 62.5 m;Air base = 625 m\nB: The scale of the photographs is 1 cm = 68.5 m;Air base = 625 m\nC: The scale of the photographs is 1 cm = 66.5 m;Air base = 625 m\nD: The scale of the photographs is 1 cm = 64.5 m;Air base = 625 m\n\nThink step by step, then respond with ONLY valid JSON matching this exact schema: {\"reasoning\": \"<your reasoning>\", \"answer\": \"<A|B|C|D>\"}.",
+  "raw_model_response": "{\"reasoning\": \"The scale of the photograph is determined by the ratio of the actual ground distance to the corresponding image distance. The image distance is the distance between the two camera positions, which is the air base. The actual ground distance is the distance between the two points on the ground, which is the sum of the two air base segments. The scale is calculated as the ratio of the actual ground distance to the image distance. The image distance is the distance between the two camera positions, which is the air base. The actual ground distance is the distance between the two points on the ground, which is the sum of the two air base segments. The scale is calculated as the ratio of the actual ground distance to the image distance. The image distance is the distance between the two camera positions, which is the air base. The actual ground distance is the distance between the two points on the ground, which is the sum of the two air base segments. The scale is calculated as the ratio of the actual ground distance to the image distance. The image distance is the distance between the two camera positions, which is the air base. The actual ground distance is the distance between the两个\", \"answer\": \"A\"}",
+  "extracted_answer": "A",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 5.97,
+  "error": null,
+  "used_fallback_extraction": false
+}
