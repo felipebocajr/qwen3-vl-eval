@@ -56,6 +56,117 @@ python scripts/verify_determinism.py
 - `src/main.py` — Orchestration loop with resume logic
 - `src/schemas.py` — Pydantic `ModelResponse` schema with `reasoning` and `answer` fields
 
+## Architecture
+
+The diagram below shows the full data flow from MMMU dataset loading through structured generation to `trajectories.jsonl`.
+
+```mermaid
+flowchart TB
+    subgraph Entry["Entry Point"]
+        MAIN["main.py"]
+    end
+
+    subgraph Data["src/data.py — Data Loading"]
+        LOAD_DS["load_dataset MMMU/MMMU"]
+        SUB1["Accounting (25)"]
+        SUB2["Architecture and Engineering (25)"]
+        SUB3["Art (25)"]
+        SUB4["Biology (25)"]
+        CONCAT["concatenate_datasets"]
+        EVAL_DS["Evaluation Dataset (100 samples)"]
+
+        LOAD_DS --> SUB1 --> CONCAT
+        LOAD_DS --> SUB2 --> CONCAT
+        LOAD_DS --> SUB3 --> CONCAT
+        LOAD_DS --> SUB4 --> CONCAT
+        CONCAT --> EVAL_DS
+    end
+
+    subgraph Model["src/model.py — Model Initialization"]
+        LOAD_MODEL["from_pretrained Qwen3-VL-2B-Instruct"]
+        PROC["AutoProcessor"]
+        DEVICE["device_map='auto' (cuda or cpu)"]
+        CACHED["_generator_cache: Outlines Generator + ModelResponse schema"]
+
+        LOAD_MODEL --> PROC --> DEVICE --> CACHED
+    end
+
+    subgraph Pipeline["src/pipeline.py — Evaluation Loop"]
+        direction TB
+        FOR["for sample in EVAL_DS"]
+        EX_IMG["extract_images: PIL images from image_1..7"]
+        FIX_FMT["Preserve PIL format after RGB convert"]
+        STRIP["strip_image_tags: remove image_N placeholders"]
+        PARSE_OPT["parse_options: ast.literal_eval"]
+        BUILD["build_prompt: Question + choices + JSON schema hint"]
+        INFER_SUBJ["infer_subject: from sample_id"]
+        INIT_REC["Initialize record dict with defaults"]
+        TRY["try block"]
+        CALL_INF["run_inference"]
+        TIMER["time.perf_counter"]
+        PARSE["extract_answer"]
+        SAVE["save_trajectory"]
+        INDIV["Write results/sample_id.json"]
+        JSONL["Append to trajectories.jsonl"]
+        CATCH["except Exception"]
+        ERR_LOG["record.error = str(exc)"]
+
+        FOR --> EX_IMG --> FIX_FMT --> STRIP --> PARSE_OPT --> BUILD
+        BUILD --> INFER_SUBJ --> INIT_REC --> TRY
+        TRY --> CALL_INF
+        CALL_INF --> TIMER --> PARSE --> SAVE
+        SAVE --> INDIV --> JSONL
+        TRY -.-> CATCH --> ERR_LOG --> SAVE
+    end
+
+    subgraph Inference["src/model.py — Structured Generation"]
+        direction TB
+        GET_GEN["_get_cached_generator"]
+        CHAT["inputs.Chat"]
+        SYS_MSG["add_system_message: JSON schema instruction"]
+        USER_MSG["add_user_message: images + prompt"]
+        GEN_CALL["generator: max_new_tokens, do_sample=False"]
+        RAW_JSON["Raw JSON string (ModelResponse)"]
+
+        GET_GEN --> CHAT --> SYS_MSG --> USER_MSG --> GEN_CALL --> RAW_JSON
+    end
+
+    subgraph Parser["src/parser.py — Answer Extraction"]
+        direction TB
+        STRIP_MD["_strip_markdown_fences"]
+        JSON_LOAD["json.loads"]
+        PYDANTIC["ModelResponse.model_validate"]
+        EXTRACT["Extract answer field A/B/C/D"]
+        FALLBACK["Best-effort fallback heuristics"]
+        FAIL["Return (None, False)"]
+
+        STRIP_MD --> JSON_LOAD --> PYDANTIC --> EXTRACT
+        JSON_LOAD -.-> FALLBACK -.-> FAIL
+    end
+
+    subgraph Output["results/ — Output Files"]
+        TRAJ_FILE["trajectories.jsonl (100 lines)"]
+        IND_FILES["sample_id.json (100 files)"]
+    end
+
+    subgraph Metrics["src/metrics.py — Aggregation (unimplemented)"]
+        STUB["Empty stub (0 lines)"]
+        SUMM["summary.json (planned)"]
+    end
+
+    MAIN --> Data
+    MAIN --> Model
+    EVAL_DS -->|yield| Pipeline
+    CACHED -->|reuse| Inference
+    CALL_INF -.->|calls| Inference
+    Inference --> RAW_JSON
+    RAW_JSON --> Parser
+    Parser -->|extracted_answer| Pipeline
+    SAVE -->|writes| Output
+    TRAJ_FILE -.->|future| Metrics
+    Metrics -.-> SUMM
+```
+
 ## Structured Generation
 
 The pipeline uses **Outlines** to enforce a Pydantic schema at every decoding step. This means the model is physically incapable of emitting invalid JSON or answers outside the allowed set (A, B, C, D).
