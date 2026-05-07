@@ -4,9 +4,13 @@ results/
 
 # speckit / specify
 .specify/
+specs/
+scripts/constitution-check.sh
 
 # pi coding agent workspace
 .pi/
+AGENTS.md
+docs/
 
 # Python
 __pycache__/
