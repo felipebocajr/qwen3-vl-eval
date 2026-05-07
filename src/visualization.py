@@ -93,9 +93,7 @@ def plot_runtime_metrics(
     with open(summary_path, "r", encoding="utf-8") as f:
         summary = json.load(f)
 
-    # ------------------------------------------------------------------
-    # Metric definitions  (label, value, unit, full_scale_value, color, formatter)
-    # ------------------------------------------------------------------
+    # Metric definitions: (label, value, unit, full_scale_value, color, formatter)
     parse_failure = summary.get("parse_failure_rate", 0.0)
     error_count = summary.get("inference_error_count", 0)
     total_evaluated = summary.get("total_samples_evaluated", 0)
@@ -114,7 +112,7 @@ def plot_runtime_metrics(
         y=0.98,
     )
 
-    # ---- Helper to draw a single-card horizontal bar ----
+    # --- Helper: single-card horizontal bar ---
     def _horizontal_bar(
         ax,
         title: str,
@@ -150,7 +148,7 @@ def plot_runtime_metrics(
         full_label = f"{full * 100:.0f}%" if unit == "%" else f"{full:.1f} {unit}"
         ax.text(1.01, 0, full_label, va="center", fontsize=8, color="#666")
 
-    # ---- Helper to draw a big-number card ----
+    # --- Helper: big-number card ---
     def _big_number(ax, title: str, value, color: str = "#1f77b4") -> None:
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
@@ -162,48 +160,215 @@ def plot_runtime_metrics(
             fontsize=36, fontweight="bold", color=color,
         )
 
-    # ------------------------------------------------------------------
     # Row 0
-    # ------------------------------------------------------------------
-    # (0,0) Parse failure rate
+    # (0, 0) Parse failure rate
     ax0 = fig.add_subplot(gs[0, 0])
     _horizontal_bar(ax0, "Parse Failure Rate", parse_failure, 1.0, "%", color="#d62728")
 
-    # (0,1) Inference error count
+    # (0, 1) Inference error count
     ax1 = fig.add_subplot(gs[0, 1])
     ecolor = "#2ca02c" if error_count == 0 else "#d62728"
     _big_number(ax1, "Inference Errors", error_count, color=ecolor)
 
-    # (0,2) Samples evaluated / max
+    # (0, 2) Samples evaluated / max
     ax2 = fig.add_subplot(gs[0, 2])
     _horizontal_bar(
         ax2, "Samples Evaluated", total_evaluated, max_samples, "samples", color="#1f77b4",
     )
 
-    # ------------------------------------------------------------------
     # Row 1
-    # ------------------------------------------------------------------
-    # (1,0) Average inference time
+    # (1, 0) Average inference time
     ax3 = fig.add_subplot(gs[1, 0])
     # use a sensible full scale — 2× the value, but at least 10 s
     scale_inf = max(avg_inference * 2, 10)
     _horizontal_bar(ax3, "Avg Inference Time", avg_inference, scale_inf, "s", color="#ff7f0e")
 
-    # (1,1) Total runtime — show in minutes
+    # (1, 1) Total runtime (in minutes)
     ax4 = fig.add_subplot(gs[1, 1])
     total_min = total_runtime / 60.0
     scale_run = max(total_min * 1.3, 5)
     _horizontal_bar(ax4, "Total Runtime", total_min, scale_run, "min", color="#9467bd")
 
-    # (1,2) Overall accuracy (cross-reference)
+    # (1, 2) Overall accuracy (cross-reference)
     ax5 = fig.add_subplot(gs[1, 2])
     _horizontal_bar(ax5, "Overall Accuracy", overall_acc, 1.0, "%", color="#17becf")
 
-    # ------------------------------------------------------------------
     # Save
-    # ------------------------------------------------------------------
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     fig.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
     print(f"[viz]  Runtime metrics chart saved to {output_path}")
+
+
+def plot_fallback_analysis(
+    trajectories_path: str = "results/trajectories.jsonl",
+    output_path: str = "results/fallback_analysis.png",
+) -> None:
+    """Read ``trajectories.jsonl`` and render the extraction cascade breakdown.
+
+    Produces a two-panel figure:
+      - **Top**: a single horizontal stacked bar showing what fraction of
+        samples passed through each stage of the extraction pipeline:
+        JSON-first-try, retry-with-2×-tokens, regex-fallback, and
+        unrecoverable failure.
+      - **Bottom**: per-subject grouped bars showing the regex-fallback
+        rate and retry rate for each MMMU subject.
+    """
+    if not os.path.exists(trajectories_path):
+        print(
+            f"[viz]  No trajectories found at {trajectories_path} — "
+            "skipping fallback chart."
+        )
+        return
+
+    # Load and classify every record.
+    records: list[dict] = []
+    with open(trajectories_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+
+    if not records:
+        print("[viz]  No valid records in trajectories — skipping fallback chart.")
+        return
+
+    total = len(records)
+
+    # Classify each sample into one of four mutually exclusive buckets.
+    json_first = 0       # succeeded on first try, JSON only, no retry, no regex
+    retry_ok = 0         # succeeded after retry (JSON), no regex needed
+    regex_ok = 0         # succeeded only via regex fallback
+    total_fail = 0       # all attempts failed
+
+    per_subject: dict[str, dict[str, int]] = {}  # subject → {json, retry, regex, fail}
+
+    for r in records:
+        subj = r.get("subject", "unknown")
+        if subj not in per_subject:
+            per_subject[subj] = {"json": 0, "retry": 0, "regex": 0, "fail": 0, "n": 0}
+
+        per_subject[subj]["n"] += 1
+
+        if not r.get("extraction_succeeded", False):
+            total_fail += 1
+            per_subject[subj]["fail"] += 1
+        elif r.get("used_fallback_extraction", False):
+            regex_ok += 1
+            per_subject[subj]["regex"] += 1
+        elif r.get("retry_used", False):
+            retry_ok += 1
+            per_subject[subj]["retry"] += 1
+        else:
+            json_first += 1
+            per_subject[subj]["json"] += 1
+
+    # Build the figure layout.
+    fig = plt.figure(figsize=(12, 7))
+    gs = GridSpec(2, 1, figure=fig, height_ratios=[1.2, 2.5], hspace=0.45)
+    fig.suptitle(
+        "Qwen3-VL-2B — Extraction Cascade Analysis",
+        fontsize=15,
+        fontweight="bold",
+        y=0.98,
+    )
+
+    # Panel 1: stacked horizontal bar (overall cascade breakdown).
+    ax_top = fig.add_subplot(gs[0])
+
+    stages = [
+        (json_first, "JSON 1ˢᵗ try", "#2ca02c"),
+        (retry_ok, "Retry 2× tkns", "#ff7f0e"),
+        (regex_ok, "Regex fallback", "#d62728"),
+        (total_fail, "Unrecovered ❌", "#7f7f7f"),
+    ]
+
+    left = 0.0
+    bar_height = 0.55
+    for count, label, color in stages:
+        frac = count / total if total > 0 else 0.0
+        ax_top.barh(0, frac, bar_height, left=left, color=color,
+                    edgecolor="white", linewidth=1.2)
+        if frac > 0.03:
+            ax_top.text(
+                left + frac / 2, 0,
+                f"{label}\n{count} ({frac * 100:.1f}%)",
+                ha="center", va="center",
+                fontsize=9, fontweight="bold",
+                color="white" if color not in ("#2ca02c", "#ff7f0e") else "white",
+            )
+        left += frac
+
+    ax_top.set_xlim(0, 1.02)
+    ax_top.set_ylim(-0.6, 0.6)
+    ax_top.set_yticks([])
+    ax_top.set_xticks([])
+    ax_top.set_title(
+        f"Extraction cascade (n={total})", fontsize=11, fontweight="bold", pad=10
+    )
+    ax_top.spines["top"].set_visible(False)
+    ax_top.spines["right"].set_visible(False)
+    ax_top.spines["left"].set_visible(False)
+    ax_top.spines["bottom"].set_visible(False)
+
+    # Panel 2: per-subject grouped bars (retry & regex rates).
+    ax_bot = fig.add_subplot(gs[1])
+
+    subjects = sorted(per_subject.keys())
+    n_subjects = len(subjects)
+
+    x = range(n_subjects)
+    width = 0.35
+
+    retry_rates = [
+        (per_subject[s]["retry"] / per_subject[s]["n"] * 100)
+        if per_subject[s]["n"] > 0 else 0.0
+        for s in subjects
+    ]
+    regex_rates = [
+        (per_subject[s]["regex"] / per_subject[s]["n"] * 100)
+        if per_subject[s]["n"] > 0 else 0.0
+        for s in subjects
+    ]
+
+    bars1 = ax_bot.bar(
+        [xi - width / 2 for xi in x], retry_rates, width,
+        color="#ff7f0e", edgecolor="white", linewidth=0.8, label="Retry rate"
+    )
+    bars2 = ax_bot.bar(
+        [xi + width / 2 for xi in x], regex_rates, width,
+        color="#d62728", edgecolor="white", linewidth=0.8, label="Regex fallback rate"
+    )
+
+    # Annotate bars
+    for bar, val in zip(bars1, retry_rates):
+        if val > 0:
+            ax_bot.text(
+                bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.3,
+                f"{val:.1f}%", ha="center", va="bottom", fontsize=8, fontweight="bold",
+            )
+    for bar, val in zip(bars2, regex_rates):
+        if val > 0:
+            ax_bot.text(
+                bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.3,
+                f"{val:.1f}%", ha="center", va="bottom", fontsize=8, fontweight="bold",
+            )
+
+    ax_bot.set_xticks(x)
+    ax_bot.set_xticklabels(subjects, rotation=30, ha="right", fontsize=10)
+    ax_bot.set_ylabel("Rate (%)", fontsize=11)
+    ax_bot.set_title("Per-subject retry & fallback rates", fontsize=11, fontweight="bold", pad=8)
+    ax_bot.legend(fontsize=9, loc="upper right")
+    ax_bot.set_ylim(0, max(max(retry_rates), max(regex_rates)) * 1.5 + 6)
+
+    # Save the figure.
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+    print(f"[viz]  Fallback analysis chart saved to {output_path}")

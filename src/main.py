@@ -2,27 +2,40 @@ from src import config
 from src.adapters import get_model_adapter
 from src.data import get_evaluation_dataset
 from src.metrics import compute_summary, save_summary
-from src.pipeline import evaluate_sample, load_completed_sample_ids, save_trajectory
+from src.pipeline import (
+    evaluate_sample,
+    load_completed_sample_ids,
+    rebuild_jsonl_from_samples,
+    save_trajectory,
+)
 
 
-def _finalize():
-    """Compute summary + visualization from existing trajectories.jsonl."""
+def _finalize() -> None:
+    """Compute summary metrics and render visualizations.
+
+    Rebuilds ``trajectories.jsonl`` from the per-sample files first, so
+    metrics are always computed from the complete set of evaluated samples.
+    """
+    n = rebuild_jsonl_from_samples(config.RESULTS_DIR)
+    print(f"Rebuilt trajectories.jsonl from {n} sample files.")
+
     summary = compute_summary(config.TRAJECTORIES_PATH, max_samples=config.MAX_SAMPLES)
     save_summary(summary, config.SUMMARY_PATH)
     print(f"Summary saved to {config.SUMMARY_PATH}")
 
-    from src.visualization import plot_accuracy_chart, plot_runtime_metrics
+    from src.visualization import plot_accuracy_chart, plot_fallback_analysis, plot_runtime_metrics
 
     plot_accuracy_chart(config.SUMMARY_PATH)
     plot_runtime_metrics(config.SUMMARY_PATH)
+    plot_fallback_analysis(config.TRAJECTORIES_PATH)
 
 
-def main():
+def main() -> None:
     """Run the full evaluation pipeline end-to-end.
 
-    Resumes from any previously completed samples, loads the model and dataset,
-    evaluates remaining samples, and produces the summary metrics and
-    visualization chart.
+    Resumes from previously completed samples, loads the model and dataset,
+    evaluates remaining samples, and produces summary metrics plus
+    visualizations.
     """
     # 1. Resume state
     completed_ids = load_completed_sample_ids(config.TRAJECTORIES_PATH)

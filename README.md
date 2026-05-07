@@ -1,16 +1,17 @@
 # Qwen3-VL MMMU Evaluation Pipeline
 
-Evaluation pipeline for running **Qwen3-VL-2B-Instruct** locally on 100 samples from the **MMMU** (Massive Multi-discipline Multimodal Understanding) dataset.
+A local evaluation pipeline that loads **Qwen3-VL-2B-Instruct**, runs structured inference on **100 stratified samples** from the **MMMU** (Massive Multi-discipline Multimodal Understanding) dataset, and produces per-sample trajectories, aggregate metrics, and visualization charts.
 
 ## Features
 
 - **Structured Generation**: Every model response is constrained at decode time by a Pydantic schema (`{"reasoning": "...", "answer": "A|B|C|D"}`) using the Outlines library, guaranteeing parseable JSON output.
-- **100-sample cap**: The pipeline evaluates at most 100 unique MMMU samples per run.
-- **Stratified sampling**: Samples are selected proportionally across subjects (e.g., ~25 from each of 4 subjects).
-- **Resumable**: If interrupted, restarting skips already-completed samples and continues up to the cap.
+- **Model Adapter Architecture**: The inference backend is decoupled behind a `BaseVLMAdapter` interface with a decorator-based registry. Swapping models (e.g., ChatGPT, Claude, another local VLM) requires only a new adapter file + one import + one string change in `main.py`.
+- **Three-Stage Extraction Cascade**: If the primary Pydantic/JSON extraction fails, the pipeline retries inference with **2× the token budget**. If that also fails, a regex fallback attempts recovery as a last resort.
+- **100-sample stratified cap**: Samples are selected proportionally across subjects (e.g., 25 from each of 4 subjects).
+- **Resumable**: If interrupted, restarting skips already-completed samples by reading `trajectories.jsonl` and continues from where it stopped.
 - **Deterministic**: The same 100 stratified samples are selected on every fresh start, ensuring reproducible results.
-- **Graceful failures**: Individual sample errors are logged without halting the pipeline.
-- **Chain-of-Thought reasoning**: The prompt instructs the model to provide step-by-step reasoning before emitting the final structured answer, with `MAX_NEW_TOKENS = 2048` to prevent truncation.
+- **Graceful degradation**: Individual sample errors are logged without halting the pipeline. Every attempted sample generates a trajectory entry.
+- **Memory management**: PIL images are explicitly closed after each sample, and PyTorch CUDA cache is purged after every generation to prevent OOM.
 
 ## Setup
 
@@ -23,189 +24,211 @@ cd <repo-folder>
 uv sync
 ```
 
-The pipeline uses **stratified sampling** to ensure balanced representation across MMMU subjects. For example, with 4 subjects and a 100-sample cap, the pipeline selects approximately 25 samples from each subject deterministically. Any shortfall in a subject (if it has fewer samples than its quota) is not backfilled from other subjects, so the total may be slightly below 100 in edge cases.
+**Requirements**: Python 3.12, CUDA-capable GPU recommended (CPU fallback works but is slow).
 
 ## Usage
 
 ```bash
 # Full evaluation (up to 100 samples)
-python -m src.main
+uv run python -m src.main
 
-# Results are written to:
-#   results/trajectories.jsonl   — one JSON record per sample
-#   results/summary.json          — aggregate metrics
+# Results are written to results/:
+#   trajectories.jsonl      — one JSON record per sample
+#   summary.json             — aggregate metrics
+#   accuracy_chart.png       — overall & per-subject accuracy bar chart
+#   runtime_metrics.png      — runtime & quality dashboard
+#   fallback_analysis.png    — extraction cascade breakdown
 ```
 
 ### Resume a partial run
 
-Simply rerun `python -m src.main`. The pipeline reads `results/trajectories.jsonl`, skips completed sample IDs, and evaluates the remaining samples up to the 100-sample cap.
+Simply rerun the pipeline. It reads `results/trajectories.jsonl`, skips completed sample IDs, and evaluates the remaining samples up to the cap.
 
 ## Project Structure
 
-```bash
-# Verify deterministic & stratified selection
-python scripts/verify_determinism.py
 ```
-
-- `src/config.py` — Cap value, paths, subject list, quota helper, and `MAX_NEW_TOKENS = 2048`
-- `src/data.py` — MMMU dataset loading and **stratified** deterministic sample selection
-- `src/model.py` — Qwen3-VL model loading and **Outlines structured generation** inference
-- `src/parser.py` — Answer extraction via **Pydantic JSON validation** (no regex)
-- `src/pipeline.py` — Per-sample evaluation and trajectory persistence
-- `src/metrics.py` — Accuracy, per-subject stats, and summary generation
-- `src/main.py` — Orchestration loop with resume logic
-- `src/schemas.py` — Pydantic `ModelResponse` schema with `reasoning` and `answer` fields
+src/
+├── __init__.py                # Package marker
+├── config.py                  # Constants: cap, paths, DEFAULT_MODEL_ID, MAX_NEW_TOKENS
+├── data.py                    # Stratified MMMU dataset loading
+├── schemas.py                 # Pydantic schemas for structured output (Outlines)
+├── parser.py                  # Answer extraction (Pydantic JSON + regex fallback)
+├── pipeline.py                # Per-sample evaluation, resume logic, extraction cascade
+├── main.py                    # Orchestration & entrypoint
+├── metrics.py                 # Aggregate summary computation
+├── visualization.py           # Matplotlib charts (accuracy, runtime, fallback)
+├── adapters/
+│   ├── __init__.py            # Factory: get_model_adapter(provider_name)
+│   ├── base.py                # BaseVLMAdapter ABC + MODEL_REGISTRY + @register_adapter
+│   ├── qwen.py                # QwenAdapter (Qwen3-VL-2B-Instruct, Outlines)
+│   └── _template.py           # Skeleton for adding new model adapters
+└── ...
+```
 
 ## Architecture
 
-The diagram below shows the full data flow from MMMU dataset loading through structured generation to `trajectories.jsonl`.
+### Adapter & Registry Pattern
 
-```mermaid
-flowchart TB
-    subgraph Entry["Entry Point"]
-        MAIN["main.py"]
-    end
+Models are loaded through a self-registering adapter system:
 
-    subgraph Data["src/data.py — Data Loading"]
-        LOAD_DS["load_dataset MMMU/MMMU"]
-        SUB1["Accounting (25)"]
-        SUB2["Architecture and Engineering (25)"]
-        SUB3["Art (25)"]
-        SUB4["Biology (25)"]
-        CONCAT["concatenate_datasets"]
-        EVAL_DS["Evaluation Dataset (100 samples)"]
+```python
+from src.adapters import get_model_adapter
 
-        LOAD_DS --> SUB1 --> CONCAT
-        LOAD_DS --> SUB2 --> CONCAT
-        LOAD_DS --> SUB3 --> CONCAT
-        LOAD_DS --> SUB4 --> CONCAT
-        CONCAT --> EVAL_DS
-    end
+adapter = get_model_adapter("qwen_local")       # loads Qwen3-VL-2B-Instruct
+answer = adapter.generate_answer(prompt, images, max_new_tokens=512)
+```
 
-    subgraph Model["src/model.py — Model Initialization"]
-        LOAD_MODEL["from_pretrained Qwen3-VL-2B-Instruct"]
-        PROC["AutoProcessor"]
-        DEVICE["device_map='auto' (cuda or cpu)"]
-        CACHED["_generator_cache: Outlines Generator + ModelResponse schema"]
+Adding a new model (e.g., Claude, ChatGPT) only requires creating a new adapter file with a `@register_adapter("name")` decorator, importing it in `__init__.py`, and changing the provider name in `main.py`. The pipeline loop and parser are untouched.
 
-        LOAD_MODEL --> PROC --> DEVICE --> CACHED
-    end
+### Swapping the Model
 
-    subgraph Pipeline["src/pipeline.py — Evaluation Loop"]
-        direction TB
-        FOR["for sample in EVAL_DS"]
-        EX_IMG["extract_images: PIL images from image_1..7"]
-        FIX_FMT["Preserve PIL format after RGB convert"]
-        STRIP["strip_image_tags: remove image_N placeholders"]
-        PARSE_OPT["parse_options: ast.literal_eval"]
-        BUILD["build_prompt: Question + choices + JSON schema hint"]
-        INFER_SUBJ["infer_subject: from sample_id"]
-        INIT_REC["Initialize record dict with defaults"]
-        TRY["try block"]
-        CALL_INF["run_inference"]
-        TIMER["time.perf_counter"]
-        PARSE["extract_answer"]
-        SAVE["save_trajectory"]
-        INDIV["Write results/sample_id.json"]
-        JSONL["Append to trajectories.jsonl"]
-        CATCH["except Exception"]
-        ERR_LOG["record.error = str(exc)"]
+The pipeline uses a provider name string (`"qwen_local"`) to select the adapter. To use a different model, follow the three steps below. A ready-to-fill template is available at `src/adapters/_template.py`.
 
-        FOR --> EX_IMG --> FIX_FMT --> STRIP --> PARSE_OPT --> BUILD
-        BUILD --> INFER_SUBJ --> INIT_REC --> TRY
-        TRY --> CALL_INF
-        CALL_INF --> TIMER --> PARSE --> SAVE
-        SAVE --> INDIV --> JSONL
-        TRY -.-> CATCH --> ERR_LOG --> SAVE
-    end
+#### Step 1 — Create the adapter file
 
-    subgraph Inference["src/model.py — Structured Generation"]
-        direction TB
-        GET_GEN["_get_cached_generator"]
-        CHAT["inputs.Chat"]
-        SYS_MSG["add_system_message: JSON schema instruction"]
-        USER_MSG["add_user_message: images + prompt"]
-        GEN_CALL["generator: max_new_tokens, do_sample=False"]
-        RAW_JSON["Raw JSON string (ModelResponse)"]
+Copy the template and fill in model-specific logic. Below is a complete example for **OpenAI (ChatGPT)**:
 
-        GET_GEN --> CHAT --> SYS_MSG --> USER_MSG --> GEN_CALL --> RAW_JSON
-    end
+```python
+# src/adapters/openai.py
+from openai import OpenAI
+from PIL import Image
 
-    subgraph Parser["src/parser.py — Answer Extraction"]
-        direction TB
-        STRIP_MD["_strip_markdown_fences"]
-        JSON_LOAD["json.loads"]
-        PYDANTIC["ModelResponse.model_validate"]
-        EXTRACT["Extract answer field A/B/C/D"]
-        FALLBACK["Best-effort fallback heuristics"]
-        FAIL["Return (None, False)"]
+from src.adapters.base import BaseVLMAdapter, register_adapter
 
-        STRIP_MD --> JSON_LOAD --> PYDANTIC --> EXTRACT
-        JSON_LOAD -.-> FALLBACK -.-> FAIL
-    end
 
-    subgraph Output["results/ — Output Files"]
-        TRAJ_FILE["trajectories.jsonl (100 lines)"]
-        IND_FILES["sample_id.json (100 files)"]
-    end
+@register_adapter("openai_api")
+class OpenAIAdapter(BaseVLMAdapter):
+    """ChatGPT adapter via OpenAI API."""
 
-    subgraph Metrics["src/metrics.py — Aggregation (unimplemented)"]
-        STUB["Empty stub (0 lines)"]
-        SUMM["summary.json (planned)"]
-    end
+    def __init__(self, model_id: str | None = None, **kwargs):
+        super().__init__()
+        self._model_id = model_id or "gpt-4o"
+        self._client = OpenAI()  # reads OPENAI_API_KEY from env
 
-    MAIN --> Data
-    MAIN --> Model
-    EVAL_DS -->|yield| Pipeline
-    CACHED -->|reuse| Inference
-    CALL_INF -.->|calls| Inference
-    Inference --> RAW_JSON
-    RAW_JSON --> Parser
-    Parser -->|extracted_answer| Pipeline
-    SAVE -->|writes| Output
-    TRAJ_FILE -.->|future| Metrics
-    Metrics -.-> SUMM
+    def generate_answer(self, prompt: str, images: list[Image.Image], **kwargs) -> str:
+        response = self._client.chat.completions.create(
+            model=self._model_id,
+            max_tokens=kwargs.get("max_new_tokens", 512),
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.choices[0].message.content
+```
+
+For a **local Hugging Face model**, follow the same pattern as `src/adapters/qwen.py` — use `from_pretrained()` to load the model and processor, optionally build an Outlines Generator for structured output.
+
+#### Step 2 — Import the adapter
+
+Add one line to `src/adapters/__init__.py`:
+
+```python
+from src.adapters import qwen    # noqa: F401   ← existing
+from src.adapters import openai  # noqa: F401   ← add this
+```
+
+The import triggers the `@register_adapter` decorator, registering `"openai_api"` in the registry automatically.
+
+#### Step 3 — Switch the provider name
+
+Change one string in `src/main.py`:
+
+```python
+# adapter = get_model_adapter("qwen_local")   ← before
+adapter = get_model_adapter("openai_api")       ← after
+```
+
+That's it. Re-run `uv run python -m src.main`. No changes to `pipeline.py`, `parser.py`, or any other file are needed.
+
+
+### Extraction Cascade
+
+```
+Step 1: First inference (max_new_tokens = 512)
+        └── extract_answer(fallback=False) — JSON/Pydantic only
+            ├── succeeded → done
+            └── failed
+                  │
+Step 2: Retry inference (max_new_tokens = 1024)
+                  └── extract_answer(fallback=False) — JSON/Pydantic only
+                      ├── succeeded → done (with retry_used=true)
+                      └── failed
+                            │
+Step 3: Regex fallback on the richer response
+                            └── extract_answer(fallback=True)
+                                ├── succeeded → done (with used_fallback_extraction=true)
+                                └── failed → extraction_succeeded=false
+```
+
+### Output Files
+
+| File | Content |
+|------|---------|
+| `trajectories.jsonl` | Per-sample records with prompt, raw response, extracted answer, success flags, timing, fallback indicators |
+| `summary.json` | Overall accuracy, per-subject accuracy, parse failure rate, error count, runtime |
+| `accuracy_chart.png` | Bar chart: overall + per-subject accuracy (%) |
+| `runtime_metrics.png` | 2×3 dashboard: parse failure rate, inference errors, completion, avg inference time, total runtime, overall accuracy |
+| `fallback_analysis.png` | Two-panel: extraction cascade stacked bar + per-subject retry & regex fallback rates |
+
+### Trajectory Record Schema
+
+```json
+{
+  "sample_id": "validation_Accounting_1",
+  "subject": "Accounting",
+  "question": "...",
+  "choices": ["A: ...", "B: ...", "C: ...", "D: ..."],
+  "correct_answer": "B",
+  "prompt_sent": "...",
+  "raw_model_response": "{\"reasoning\": \"...\", \"answer\": \"B\"}",
+  "extracted_answer": "B",
+  "extraction_succeeded": true,
+  "is_correct": true,
+  "inference_time_seconds": 10.15,
+  "error": null,
+  "used_fallback_extraction": false,
+  "retry_used": false,
+  "retry_inference_time_seconds": null
+}
 ```
 
 ## Structured Generation
 
-The pipeline uses **Outlines** to enforce a Pydantic schema at every decoding step. This means the model is physically incapable of emitting invalid JSON or answers outside the allowed set (A, B, C, D).
+The pipeline uses **Outlines** to enforce a Pydantic schema at every decoding step:
 
-### How it works
+1. **Schema definition** (`src/schemas.py`): A `ModelResponse` model with free-form `reasoning` and an enumerated `answer` field (A–J).
+2. **Constrained generation** (`src/adapters/qwen.py`): The Outlines `Generator` wraps Qwen3-VL with logits filtering that only allows tokens conforming to the schema.
+3. **Deterministic parsing** (`src/parser.py`): Responses are parsed with `json.loads()` + `ModelResponse.model_validate()`. The regex fallback only activates when both JSON attempts fail.
+4. **Prompt design** (`src/pipeline.py`): The prompt instructs the model to think step by step and emit ONLY valid JSON.
 
-1. **Schema definition** (`src/schemas.py`): A `ModelResponse` Pydantic model defines two fields:
-   - `reasoning`: free-form text for step-by-step chain-of-thought
-   - `answer`: constrained to exactly one of `A`, `B`, `C`, `D`
+## Project Considerations
 
-2. **Constrained generation** (`src/model.py`): The Outlines `Generator` wraps the Qwen3-VL model with a logits processor that only allows tokens conforming to the schema at each decoding step.
+### Results
 
-3. **Deterministic parsing** (`src/parser.py`): Raw responses are parsed with `json.loads()` + `ModelResponse.model_validate()`. There is **zero regex-based extraction** — either the response validates against the schema or it is flagged as a parse failure.
+- Fetches 100 samples from the HF MMMU dataset using stratified fetching across subjects, meaning all subjects have the same number of samples evaluated.
+- Resumability logic implemented by tracking the `sample_id`, ensuring that the pipeline can continue exactly from where it stopped if anything interrupts it in the middle of an evaluation.
+- Structured generation via Outlines ensures every model output is valid, parseable JSON — eliminating brittle regex-only extraction from the primary path.
 
-4. **Prompt design** (`src/pipeline.py`): The evaluation prompt explicitly instructs the model to think step by step and then emit ONLY valid JSON matching the schema.
+### Main Issues Encountered
 
-### Verification
+- **5% parse failure rate with 512 max_new_tokens**, mainly due to truncated model outputs. Switching to 1024 max_new_tokens via the retry fallback achieved a 0% parse failure rate (every sample was answered by the model). Dealing with the truncation of the model's reasoning was a significant challenge.
 
-To confirm the pipeline is using structured generation:
+  **Approach**: Implemented a three-stage extraction cascade. If the first inference attempt fails to produce parseable JSON, the pipeline retries the same sample with 2× the token budget. If that also fails, a regex-based fallback attempts recovery as a last resort.
 
-```bash
-# Check parser has no regex answer extraction
-grep -E "re\.(search|match|findall|compile)" src/parser.py
-# Expected: no output
+- **Memory explosion (OOM)**: The system was not releasing consumed RAM during new sample evaluations, resulting in multiple crashes.
 
-# Check model uses Outlines Generator
-grep "Generator" src/model.py
-# Expected: lines referencing Generator with output_type=ModelResponse
+  **Approach**: 1) Explicitly closing PIL images after each sample for immediate garbage collection; 2) Forcing PyTorch to release cached GPU memory via `torch.cuda.empty_cache()` after every generation.
 
-# Check prompt requests reasoning + JSON
-grep "Think step by step" src/pipeline.py
-# Expected: the prompt line
-```
+## Verification Scripts
 
 ```bash
+# Check parser follows structured output mandate
+bash scripts/constitution-check.sh
+
+# Verify deterministic sample selection
 python scripts/verify_determinism.py
-```
 
-The pipeline uses **stratified sampling** to ensure balanced representation across MMMU subjects. For example, with 4 subjects and a 100-sample cap, the pipeline selects approximately 25 samples from each subject deterministically. Any shortfall in a subject (if it has fewer samples than its quota) is not backfilled from other subjects, so the total may be slightly below 100 in edge cases.
+# Test stratified sampling distribution
+python scripts/test_stratified.py
+```
 
 ## License
 

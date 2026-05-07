@@ -19,14 +19,16 @@ from src.parser import extract_answer
 
 
 def extract_images(sample: dict) -> List[Image.Image]:
-    """Extract up to 7 images from an MMMU sample dict, converting to RGB.
+    """Extract up to 7 images from an MMMU sample dict.
 
-    Preserves the original image format metadata if available.
+    Converts non-RGB images to RGB and preserves the original image format
+    metadata when available.
     """
     images = []
     for i in range(1, 8):
         img = sample.get(f"image_{i}")
         if img is not None:
+            # Preserve format metadata across mode conversion.
             original_format = getattr(img, "format", None)
             if img.mode != "RGB":
                 img = img.convert("RGB")
@@ -36,7 +38,11 @@ def extract_images(sample: dict) -> List[Image.Image]:
     return images
 
 def parse_options(options_str: str) -> List[str]:
-    """Parse MMMU options string into a Python list."""
+    """Parse the MMMU options string into a list of individual choices.
+
+    Tries ``ast.literal_eval`` for safe structured parsing first. Falls back
+    to comma-splitting on malformed strings.
+    """
     try:
         return ast.literal_eval(options_str)
     except Exception:
@@ -49,19 +55,24 @@ def strip_image_tags(question: str) -> str:
 
 
 def format_choices(options: List[str]) -> List[str]:
-    """Format options with letter prefixes."""
+    """Prefix each option string with its letter (A, B, C, …)."""
     letters = [chr(ord("A") + i) for i in range(len(options))]
     return [f"{letter}: {opt}" for letter, opt in zip(letters, options)]
 
 
 def build_prompt(question: str, options: List[str]) -> str:
-    """Build the text prompt for a multiple-choice question."""
+    """Build the text prompt for a multiple-choice question.
+
+    Formats the question and options, then appends an instruction to respond
+    with valid JSON (including a schema hint showing the allowed answer
+    letters).
+    """
     lines = [f"Question: {question}"]
     if options:
         lines.append("Options:")
         for choice in format_choices(options):
             lines.append(choice)
-    # Build a human-readable schema hint that matches the actual option count
+    # Build a human-readable schema hint matching the actual option count.
     if options:
         letters = "|".join(chr(ord("A") + i) for i in range(len(options)))
         schema_hint = f'{{"reasoning": "<your reasoning>", "answer": "<{letters}>"}}'
@@ -75,7 +86,10 @@ def build_prompt(question: str, options: List[str]) -> str:
 
 
 def infer_subject(sample_id: str) -> str:
-    """Infer subject from sample id like 'validation_Accounting_1'."""
+    """Infer the MMMU subject name from a sample ID string.
+
+    Example: ``"validation_Accounting_1"`` → ``"Accounting"``.
+    """
     parts = sample_id.split("_")
     if len(parts) > 2 and parts[0] == "validation":
         return "_".join(parts[1:-1])
@@ -83,10 +97,22 @@ def infer_subject(sample_id: str) -> str:
 
 
 def evaluate_sample(adapter, sample) -> dict:
-    """
-    Run the full evaluation pipeline on a single dataset sample.
+    """Run the full evaluation pipeline on a single dataset sample.
 
-    Returns a structured record dict ready for persistence.
+    Performs image extraction, prompt construction, model inference (with
+    automatic retry and regex fallback on extraction failure), answer
+    parsing, and correctness judging.
+
+    Args:
+        adapter: A ``BaseVLMAdapter`` instance that provides
+            ``generate_answer``.
+        sample: An MMMU dataset row dict with keys ``id``, ``question``,
+            ``options``, ``answer``, and ``image_1`` … ``image_7``.
+
+    Returns:
+        A dict ready for JSONL persistence containing the sample metadata,
+        model response, extraction result, correctness flag, and timing
+        information.
     """
     sample_id = sample["id"]
     images = extract_images(sample)
@@ -111,9 +137,12 @@ def evaluate_sample(adapter, sample) -> dict:
         "inference_time_seconds": None,
         "error": None,
         "used_fallback_extraction": False,
+        "retry_used": False,
+        "retry_inference_time_seconds": None,
     }
 
     try:
+        # Step 1: first inference (JSON extraction only, no regex yet).
         start = time.perf_counter()
         raw_answer = adapter.generate_answer(
             prompt,
@@ -121,26 +150,57 @@ def evaluate_sample(adapter, sample) -> dict:
             max_new_tokens=config.MAX_NEW_TOKENS,
         )
         elapsed = time.perf_counter() - start
-        record["inference_time_seconds"] = round(elapsed, 2)
-        record["raw_model_response"] = raw_answer
 
-        extracted, succeeded = extract_answer(raw_answer, num_choices=len(options))
+        num_opts = len(options)
+        extracted, succeeded = extract_answer(raw_answer, num_choices=num_opts, fallback=False)
+
+        retry_time = 0.0
+        retry_raw: str | None = None
+
+        # Step 2: retry with 2× token budget (JSON only, still no regex).
+        if not succeeded:
+            print(
+                f"    🔄 JSON extraction failed for {sample_id} — "
+                f"retrying with {config.MAX_NEW_TOKENS * 2} max_new_tokens"
+            )
+            retry_start = time.perf_counter()
+            retry_raw = adapter.generate_answer(
+                prompt,
+                images,
+                max_new_tokens=config.MAX_NEW_TOKENS * 2,
+            )
+            retry_time = time.perf_counter() - retry_start
+            elapsed += retry_time
+
+            extracted, succeeded = extract_answer(
+                retry_raw, num_choices=num_opts, fallback=False
+            )
+            record["retry_used"] = True
+            record["retry_inference_time_seconds"] = round(retry_time, 2)
+            raw_answer = retry_raw  # keep the richer response for regex fallback
+
+        # Step 3: regex fallback (last resort). Uses whichever response
+        # has more context — the retry response (2× tokens) if available.
+        if not succeeded:
+            best_text = retry_raw if retry_raw is not None else raw_answer
+            extracted, succeeded = extract_answer(
+                best_text, num_choices=num_opts, fallback=True
+            )
+            if succeeded:
+                record["used_fallback_extraction"] = True
+                raw_answer = best_text
+                print(f"    ⚠️  Regex fallback recovered answer for {sample_id}")
+            else:
+                print(f"    ❌ All extraction attempts failed for {sample_id}")
+
+        # Finalise record.
+        record["raw_model_response"] = raw_answer
         record["extracted_answer"] = extracted
         record["extraction_succeeded"] = succeeded
-
-        # Detect if fallback was used: if extraction succeeded but the raw
-        # response isn't valid JSON, the regex fallback recovered the answer.
-        if succeeded:
-            try:
-                json.loads(raw_answer.strip())
-            except json.JSONDecodeError:
-                record["used_fallback_extraction"] = True
-                print(f"    ⚠️  Fallback extraction used for {sample_id}")
-
+        record["inference_time_seconds"] = round(elapsed, 2)
         record["is_correct"] = succeeded and (extracted == correct_answer)
 
-        # Explicitly release PIL image references so they can be garbage
-        # collected before the next sample.
+        # Release PIL image references to prevent memory creep across samples.
         for img in images:
             img.close()
         images.clear()
@@ -151,31 +211,45 @@ def evaluate_sample(adapter, sample) -> dict:
 
 
 def load_completed_sample_ids(jsonl_path: str) -> set[str]:
-    """Read trajectories.jsonl and return a set of already-completed sample IDs."""
-    completed = set()
-    if not os.path.exists(jsonl_path):
-        return completed
+    """Return the set of sample IDs already present in the trajectories file.
 
-    with open(jsonl_path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                record = json.loads(line)
-                completed.add(record["sample_id"])
-            except (json.JSONDecodeError, KeyError):
-                continue
+    Also scans the ``results/samples/`` directory as a backup source of truth,
+    so that if ``trajectories.jsonl`` is truncated or lost, the per-sample
+    JSON files still count as completed.
+
+    Returns an empty set if neither source has any records.
+    """
+    completed = set()
+
+    # Primary source: trajectories.jsonl
+    if os.path.exists(jsonl_path):
+        with open(jsonl_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    record = json.loads(line)
+                    completed.add(record["sample_id"])
+                except (json.JSONDecodeError, KeyError):
+                    continue
+
+    # Backup source: per-sample JSON files under results/samples/
+    samples_dir = os.path.join("results", "samples")
+    if os.path.isdir(samples_dir):
+        for fname in os.listdir(samples_dir):
+            if fname.endswith(".json"):
+                sample_id = fname[:-5]  # strip .json suffix
+                completed.add(sample_id)
 
     return completed
 
 
-def save_trajectory(record: dict, out_dir: str = "results"):
-    """Persist a trajectory record to both a per-sample JSON file and the aggregate JSONL.
+def save_trajectory(record: dict, out_dir: str = "results") -> None:
+    """Persist a trajectory record to disk.
 
-    Args:
-        record: The evaluation record dictionary.
-        out_dir: Base output directory (defaults to ``"results"``).
+    Writes both a per-sample JSON file under ``<out_dir>/samples/`` and
+    appends one line to the aggregate ``trajectories.jsonl``.
     """
     os.makedirs(out_dir, exist_ok=True)
 
@@ -192,3 +266,36 @@ def save_trajectory(record: dict, out_dir: str = "results"):
     with open(jsonl_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
     print(f"Appended record to {jsonl_path}")
+
+
+def rebuild_jsonl_from_samples(out_dir: str = "results") -> int:
+    """Rebuild ``trajectories.jsonl`` from per-sample JSON files.
+
+    Reads every ``.json`` file under ``<out_dir>/samples/`` and writes them
+    as one JSONL line each into ``<out_dir>/trajectories.jsonl``, sorted by
+    filename. This ensures the JSONL stays in sync with the individual sample
+    records even if the JSONL was truncated or lost.
+
+    Returns:
+        The number of records written.
+    """
+    samples_dir = os.path.join(out_dir, "samples")
+    if not os.path.isdir(samples_dir):
+        return 0
+
+    records = []
+    for fname in sorted(os.listdir(samples_dir)):
+        if fname.endswith(".json"):
+            fpath = os.path.join(samples_dir, fname)
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    records.append(json.load(f))
+            except (json.JSONDecodeError, OSError):
+                continue
+
+    jsonl_path = os.path.join(out_dir, "trajectories.jsonl")
+    with open(jsonl_path, "w", encoding="utf-8") as f:
+        for rec in records:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+    return len(records)

@@ -13,16 +13,12 @@ from typing import Any
 
 from src.adapters.base import BaseVLMAdapter, MODEL_REGISTRY
 
-# ---------------------------------------------------------------------------
 # Import adapter modules so @register_adapter decorators fire at import time.
 # Add new adapter imports below when extending the pipeline.
-# ---------------------------------------------------------------------------
 from src.adapters import qwen  # noqa: F401
 
 
-# ---------------------------------------------------------------------------
-# Public factory
-# ---------------------------------------------------------------------------
+# --- Public factory ---
 
 
 def get_model_adapter(provider_name: str, **kwargs: Any) -> BaseVLMAdapter:

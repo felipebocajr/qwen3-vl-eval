@@ -11,22 +11,24 @@ from typing import Any
 
 from PIL import Image
 
-# ---------------------------------------------------------------------------
-# Registry
-# ---------------------------------------------------------------------------
+# --- Registry ---
 
 MODEL_REGISTRY: dict[str, type["BaseVLMAdapter"]] = {}
-"""Maps a short provider name (e.g. ``"qwen_local"``) to an adapter class."""
+"""Global adapter registry mapping provider names to adapter classes."""
 
 
 def register_adapter(name: str):
-    """Class decorator that registers *cls* in ``MODEL_REGISTRY`` under *name*.
+    """Class decorator that registers an adapter class under *name*.
 
-    Usage::
+    Example::
 
         @register_adapter("qwen_local")
         class QwenAdapter(BaseVLMAdapter):
             ...
+
+    Raises:
+        TypeError: If the decorated class is not a ``BaseVLMAdapter``.
+        KeyError: If *name* is already registered.
     """
 
     def _decorator(cls: type[BaseVLMAdapter]) -> type[BaseVLMAdapter]:
@@ -43,9 +45,7 @@ def register_adapter(name: str):
     return _decorator
 
 
-# ---------------------------------------------------------------------------
-# Abstract interface
-# ---------------------------------------------------------------------------
+# --- Abstract interface ---
 
 
 class BaseVLMAdapter(abc.ABC):

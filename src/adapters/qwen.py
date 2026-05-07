@@ -18,13 +18,13 @@ from src import config
 from src.adapters.base import BaseVLMAdapter, register_adapter
 from src.schemas import make_response_schema
 
-# We use a single schema allowing all letters A-J (covering the maximum
-# MMMU option count of 9).  The parser post-validates that the extracted
-# answer falls within the actual range for each sample.  This avoids
-# building 7 redundant Generators — each with its own heavy FSM index
-# for the JSON schema (the max_length=1200 reasoning field forces
-# outlines to build a counting automaton).
-_MAX_OPTIONS = 10  # max option letters A-J supported
+_MAX_OPTIONS = 10
+"""Maximum number of option letters (A-J) the cached Generator supports.
+
+A single schema covers all MMMU samples (max 9 options). The parser
+post-validates that the extracted letter falls within each sample's actual
+range, avoiding the need to rebuild heavy FSM indices per sample.
+"""
 
 
 @register_adapter("qwen_local")
@@ -68,12 +68,14 @@ class QwenAdapter(BaseVLMAdapter):
         self._build_generator()
         print("Model loaded.")
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
+    # --- Internal helpers ---
 
     def _build_generator(self) -> None:
-        """Create (or re-create) the cached Outlines Generator."""
+        """Build (or rebuild) the cached Outlines Generator.
+
+        Uses a single ``JsonSchema`` covering options A-J so every sample
+        shares the same FSM index, avoiding per-sample rebuild costs.
+        """
         outlines_model = from_transformers(self._model, self._processor)
         output_schema = make_response_schema(_MAX_OPTIONS)
         self._generator = Generator(outlines_model, output_type=output_schema)
@@ -89,9 +91,7 @@ class QwenAdapter(BaseVLMAdapter):
             torch.cuda.empty_cache()
             gc.collect()
 
-    # ------------------------------------------------------------------
-    # Public interface
-    # ------------------------------------------------------------------
+    # --- Public interface ---
 
     def generate_answer(
         self,
@@ -114,7 +114,7 @@ class QwenAdapter(BaseVLMAdapter):
         if self._generator is None:
             self._build_generator()
 
-        max_new_tokens: int = kwargs.get("max_new_tokens", 512)
+        max_new_tokens: int = kwargs.get("max_new_tokens")
 
         system_text = (
             "You are a helpful assistant. For multiple-choice questions, analyze "

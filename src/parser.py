@@ -4,8 +4,6 @@ import json
 import re
 from typing import Tuple
 
-from pydantic import ValidationError
-
 from src.schemas import make_response_model
 
 
@@ -73,20 +71,23 @@ def _fallback_extract_answer(text: str, num_choices: int) -> Tuple[str | None, b
         return None, False
 
 
-def extract_answer(text: str, num_choices: int = 4) -> Tuple[str | None, bool]:
+def extract_answer(text: str, num_choices: int = 4, fallback: bool = True) -> Tuple[str | None, bool]:
     """Extract a multiple-choice letter answer from raw model text.
 
     Primary strategy: parse the response as structured JSON and validate via
-    Pydantic. Falls back to regex-based extraction if JSON parsing fails.
+    Pydantic.  If *fallback* is ``True`` and JSON parsing fails, regex-based
+    extraction is attempted as a last resort.
 
     Args:
         text: Raw model output string.
         num_choices: Number of valid answer options (e.g., 4 for A-D).
+        fallback: When ``True`` (default), invoke regex fallback on JSON
+            parse failure.  Set to ``False`` to get JSON-only extraction.
 
     Returns:
-        Tuple of (extracted_letter, succeeded). *extracted_letter* is ``None``
-        if extraction failed; *succeeded* indicates whether a valid answer was
-        recovered.
+        Tuple of (extracted_letter, succeeded). *extracted_letter* is
+        ``None`` if extraction failed; *succeeded* indicates whether a
+        valid answer was recovered.
     """
     text = text.strip()
     if not text:
@@ -101,4 +102,6 @@ def extract_answer(text: str, num_choices: int = 4) -> Tuple[str | None, bool]:
         answer = validated.answer
         return answer.value if hasattr(answer, 'value') else answer, True
     except (json.JSONDecodeError, Exception):
+        if not fallback:
+            return None, False
         return _fallback_extract_answer(text, num_choices)
