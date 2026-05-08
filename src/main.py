@@ -52,7 +52,7 @@ def main() -> None:
         return
 
     # 3. Load adapter via factory
-    adapter = get_model_adapter("qwen_local")
+    adapter = get_model_adapter("medgemma_ollama")
 
     # 4. Load evaluation dataset (stratified + deterministically capped)
     dataset = get_evaluation_dataset(max_samples=config.MAX_SAMPLES)
