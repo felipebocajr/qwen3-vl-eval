@@ -1,4 +1,4 @@
-"""MedGemma 1.5 4B adapter — local inference via Ollama API.
+"""Gemma 4 adapter — local inference via Ollama API.
 
 Wraps the Ollama chat API behind a ``BaseVLMAdapter``-compliant class.
 """
@@ -15,22 +15,22 @@ from PIL import Image
 from src.adapters.base import BaseVLMAdapter, register_adapter
 
 
-@register_adapter("medgemma_ollama")
-class MedGemmaAdapter(BaseVLMAdapter):
-    """MedGemma 1.5 4B adapter via Ollama.
+@register_adapter("gemma_ollama")
+class GemmaAdapter(BaseVLMAdapter):
+    """Gemma 4 adapter via Ollama.
 
     Talks to a local Ollama server at ``http://localhost:11434``. The model
-    must already be pulled: ``ollama pull medgemma1.5:4b``.
+    must already be pulled: ``ollama pull gemma4:e2b``.
     """
 
     def __init__(self, model_id: str | None = None, **kwargs: Any) -> None:
         super().__init__()
         _ = kwargs
 
-        self._model_id: str = model_id or "medgemma1.5:4b"
+        self._model_id: str = model_id or "gemma4:e2b"
         self._api_url: str = "http://localhost:11434/api/chat"
 
-        print(f"Adapter 'MedGemmaAdapter' ready (model={self._model_id}).")
+        print(f"Adapter 'GemmaAdapter' ready (model={self._model_id}).")
 
     # --- Public interface ---
 

@@ -15,7 +15,7 @@ from src.adapters.base import BaseVLMAdapter, MODEL_REGISTRY
 
 # Import adapter modules so @register_adapter decorators fire at import time.
 # Add new adapter imports below when extending the pipeline.
-from src.adapters import medgemma  # noqa: F401
+from src.adapters import gemma  # noqa: F401
 from src.adapters import qwen  # noqa: F401
 
 
