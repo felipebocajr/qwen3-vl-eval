@@ -130,6 +130,10 @@ def evaluate_sample(adapter, sample) -> dict:
         "choices": choices,
         "correct_answer": correct_answer,
         "prompt_sent": prompt,
+        "model_used": adapter.model_name,
+        "first_try": None,
+        "retry_2x": None,
+        "regex_fallback": None,
         "raw_model_response": None,
         "extracted_answer": None,
         "extraction_succeeded": False,
@@ -154,6 +158,13 @@ def evaluate_sample(adapter, sample) -> dict:
         num_opts = len(options)
         extracted, succeeded = extract_answer(raw_answer, num_choices=num_opts, fallback=False)
 
+        record["first_try"] = {
+            "raw_response": raw_answer,
+            "extracted_answer": extracted,
+            "succeeded": succeeded,
+            "inference_time_seconds": round(elapsed, 2),
+        }
+
         retry_time = 0.0
         retry_raw: str | None = None
 
@@ -172,23 +183,36 @@ def evaluate_sample(adapter, sample) -> dict:
             retry_time = time.perf_counter() - retry_start
             elapsed += retry_time
 
-            extracted, succeeded = extract_answer(
+            retry_extracted, retry_succeeded = extract_answer(
                 retry_raw, num_choices=num_opts, fallback=False
             )
+            record["retry_2x"] = {
+                "raw_response": retry_raw,
+                "extracted_answer": retry_extracted,
+                "succeeded": retry_succeeded,
+                "inference_time_seconds": round(retry_time, 2),
+            }
             record["retry_used"] = True
             record["retry_inference_time_seconds"] = round(retry_time, 2)
             raw_answer = retry_raw  # keep the richer response for regex fallback
+            extracted, succeeded = retry_extracted, retry_succeeded
 
         # Step 3: regex fallback (last resort). Uses whichever response
         # has more context — the retry response (2× tokens) if available.
         if not succeeded:
             best_text = retry_raw if retry_raw is not None else raw_answer
-            extracted, succeeded = extract_answer(
+            regex_extracted, regex_succeeded = extract_answer(
                 best_text, num_choices=num_opts, fallback=True
             )
-            if succeeded:
+            record["regex_fallback"] = {
+                "raw_response": best_text,
+                "extracted_answer": regex_extracted,
+                "succeeded": regex_succeeded,
+            }
+            if regex_succeeded:
                 record["used_fallback_extraction"] = True
                 raw_answer = best_text
+                extracted, succeeded = regex_extracted, regex_succeeded
                 print(f"    ⚠️  Regex fallback recovered answer for {sample_id}")
             else:
                 print(f"    ❌ All extraction attempts failed for {sample_id}")

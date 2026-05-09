@@ -1,5 +1,6 @@
 # Project-specific
 project-goal.txt
+results/samples/
 
 # speckit / specify
 .specify/
@@ -10,6 +11,11 @@ scripts/constitution-check.sh
 .pi/
 AGENTS.md
 docs/
+
+# Claude Code
+.claude/agents/
+diagram
+claude
 
 # Python
 __pycache__/

@@ -6,10 +6,10 @@
     "Art": 0.56,
     "Biology": 0.4
   },
-  "parse_failure_rate": 0.0,
+  "parse_failure_rate": 0.05,
   "inference_error_count": 0,
-  "average_inference_time_sec": 7.05,
-  "total_runtime_sec": 704.91,
+  "average_inference_time_sec": 20.68,
+  "total_runtime_sec": 2068.23,
   "total_samples_evaluated": 100,
   "max_samples": 100
 }

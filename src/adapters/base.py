@@ -57,6 +57,11 @@ class BaseVLMAdapter(abc.ABC):
     responsible for structured parsing.
     """
 
+    @property
+    def model_name(self) -> str:
+        """The model identifier used by this adapter (e.g. ``"gemma4:e2b"``)."""
+        return getattr(self, "_model_id", "unknown")
+
     @abc.abstractmethod
     def generate_answer(
         self,
